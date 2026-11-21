@@ -26,12 +26,13 @@ $('go').addEventListener('click',begin);$('again').addEventListener('click',begi
 
 /* ═════════ loop ═════════ */
 let last=0;
-function frame(ms){const dt=Math.min(.05,(ms-last)/1000||0);last=ms;step(dt);
+function frame(ms){const raw=last?(ms-last)/1000:0,dt=Math.min(.05,raw);last=ms;qualMonitor(raw);step(dt);
   postMat.uniforms.time.value=G.t;renderer.setRenderTarget(rt);renderer.render(W.scene,camera);renderer.setRenderTarget(null);renderer.render(postScene,postCam);requestAnimationFrame(frame);}
-function start(){resize();setTimeout(()=>{try{buildWorld();reset();}catch(e){console.error(e);$('go').textContent='불러오지 못했습니다';return;}
-  const b=$('go');b.disabled=false;b.textContent='문턱을 넘는다';requestAnimationFrame(frame);},60);}
-const hot=window.claude&&window.claude.hot;
-if(hot&&hot.ready)hot.ready(start);else start();
+function start(){resize();qLabel();const b=$('go'),fail=e=>{console.error(e);b.textContent='불러오지 못했습니다';};
+  setTimeout(()=>{try{buildWorld();}catch(e){fail(e);return;}
+    runSculpts((d,n)=>{b.textContent='캐릭터를 조형하는 중… '+d+' / '+n;}).then(()=>{reset();applyQuality();
+      b.disabled=false;b.textContent='문턱을 넘는다';requestAnimationFrame(frame);}).catch(fail);},60);}
+start();
 })();
 </script>
 </body>

@@ -18,19 +18,19 @@ function pd(p,x,y,z){
     return k1<1e-9?-Math.min(r[0],r[1],r[2]):k0*(k0-1)/k1;}
   const a=p.a,d=p.d;let px=x-a[0],py=y-a[1],pz=z-a[2],t=(px*d[0]+py*d[1]+pz*d[2])*p.il;t=t<0?0:t>1?1:t;
   px-=d[0]*t;py-=d[1]*t;pz-=d[2]*t;return Math.sqrt(px*px+py*py+pz*pz)-(p.ra+(p.rb-p.ra)*t);}
-function makeSDF(prims,disp){prims.forEach(prep);const n=prims.length;
+function makeSDF(prims){const n=prims.length;
   return function(x,y,z){let d=1e9;
     for(let i=0;i<n;i++){const p=prims[i],di=pd(p,x,y,z),k=p.k;
       if(p.sub){let h=k-Math.abs(-di-d);h=h>0?h/k:0;d=(d>-di?d:-di)+h*h*k*.25;}
       else if(d>1e8)d=di;
       else{let h=k-Math.abs(di-d);h=h>0?h/k:0;d=(d<di?d:di)-h*h*k*.25;}}
-    return disp?d+disp(x,y,z):d;};}
+    return d;};}
 function bounds(prims,pad){const lo=[9,9,9],hi=[-9,-9,-9];
   prims.forEach(p=>{if(p.sub)return;const pts=p.t===0?[[p.c,Math.max(p.r[0],p.r[1],p.r[2])]]:[[p.a,p.ra],[p.b,p.rb]];
     pts.forEach(q=>{for(let s=p.sym?-1:1;s<=1;s+=2)for(let i=0;i<3;i++){const v=i===0?q[0][0]*s:q[0][i];lo[i]=Math.min(lo[i],v-q[1]);hi[i]=Math.max(hi[i],v+q[1]);}});});
   for(let i=0;i<3;i++){lo[i]-=pad;hi[i]+=pad;}return[lo,hi];}
-/* naive surface nets → indexed smooth mesh */
-function polygonize(sdf,lo,hi,cell){
+/* naive surface nets → indexed smooth mesh (plain arrays only: this also runs inside the sculpt workers) */
+function polyCore(sdf,lo,hi,cell){
   const nx=Math.ceil((hi[0]-lo[0])/cell)+1,ny=Math.ceil((hi[1]-lo[1])/cell)+1,nz=Math.ceil((hi[2]-lo[2])/cell)+1,g=new Float32Array(nx*ny*nz);
   for(let k=0,q=0;k<nz;k++)for(let j=0;j<ny;j++)for(let i=0;i<nx;i++,q++)g[q]=sdf(lo[0]+i*cell,lo[1]+j*cell,lo[2]+k*cell);
   const cx=nx-1,cy=ny-1,vid=new Int32Array(cx*cy*(nz-1)).fill(-1),pos=[],idx=[],sx=1,sy=nx,sz=nx*ny;
@@ -48,8 +48,7 @@ function polygonize(sdf,lo,hi,cell){
     if(i<nx-1&&s!==(g[b+sx]<0))quad(V(i,j-1,k-1),V(i,j,k-1),V(i,j,k),V(i,j-1,k),!s);
     if(j<ny-1&&s!==(g[b+sy]<0))quad(V(i-1,j,k-1),V(i-1,j,k),V(i,j,k),V(i,j,k-1),!s);
     if(k<nz-1&&s!==(g[b+sz]<0))quad(V(i-1,j-1,k),V(i,j-1,k),V(i,j,k),V(i-1,j,k),!s);}
-  const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(pos,3));
-  geo.setIndex(pos.length/3>65535?new T.Uint32BufferAttribute(idx,1):new T.Uint16BufferAttribute(idx,1));geo.computeVertexNormals();return geo;}
+  return{pos:new Float32Array(pos),idx:pos.length/3>65535?new Uint32Array(idx):new Uint16Array(idx)};}
 /* per-vertex colour and fur length from the nearest primitives, then a part-specific tint */
 function paint(geo,prims,base,tint){const P=geo.attributes.position,N=geo.attributes.normal,n=P.count,col=new Float32Array(n*3),fur=new Float32Array(n),add=prims.filter(p=>!p.sub),ds=new Float32Array(add.length),o={c:[0,0,0],fur:1};
   for(let i=0;i<n;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i);let dm=1e9;
@@ -58,7 +57,37 @@ function paint(geo,prims,base,tint){const P=geo.attributes.position,N=geo.attrib
     o.c[0]=r/w;o.c[1]=g/w;o.c[2]=b/w;o.fur=f/w;if(tint)tint(x,y,z,N.getX(i),N.getY(i),N.getZ(i),o);
     col[i*3]=o.c[0];col[i*3+1]=o.c[1];col[i*3+2]=o.c[2];fur[i]=o.fur;}
   geo.setAttribute('color',new T.BufferAttribute(col,3));geo.setAttribute('fur',new T.BufferAttribute(fur,1));return geo;}
-function sculpt(prims,cell,base,tint,disp){const sdf=makeSDF(prims,disp),b=bounds(prims,cell*2.5+(disp?.03:0));return paint(polygonize(sdf,b[0],b[1],cell),prims,base,tint);}
+/* sculpt() returns an empty geometry at once and queues the job; runSculpts() fills every queued geometry.
+   Meshing runs in Web Workers (one per spare core) and the raw mesh is cached in IndexedDB under a hash of the
+   shape, so a second visit skips meshing entirely. Painting stays on the main thread because tints are closures. */
+const SJ=[];
+function sculpt(prims,cell,base,tint){prims.forEach(prep);const geo=new T.BufferGeometry();SJ.push({prims,cell,base,tint,geo,b:bounds(prims,cell*2.5)});return geo;}
+const WSRC=[pd,makeSDF,polyCore].map(f=>f.toString()).join('\n')+
+  '\nonmessage=function(e){var d=e.data,r=polyCore(makeSDF(d.prims),d.lo,d.hi,d.cell);postMessage(r,[r.pos.buffer,r.idx.buffer]);};';
+function sculptKey(j){const g=j.prims.map(p=>[p.t,p.c,p.r,p.a,p.b,p.ra,p.rb,p.k,p.sym?1:0,p.sub?1:0,p.m]),s=JSON.stringify([j.cell,j.b,g]);
+  let h1=0x811c9dc5,h2=0x1505;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);h1=Math.imul(h1^c,16777619);h2=(Math.imul(h2,33)+c)|0;}
+  return'sn1:'+(h1>>>0).toString(36)+(h2>>>0).toString(36)+':'+s.length;}
+const IDB=(function(){let p=null;const wait=(pr,ms)=>Promise.race([pr,new Promise(r=>setTimeout(()=>r(null),ms))]);
+  function db(){if(!p)p=wait(new Promise(res=>{try{const r=indexedDB.open('mouse-father',1);r.onupgradeneeded=()=>r.result.createObjectStore('sculpt');
+    r.onsuccess=()=>res(r.result);r.onerror=r.onblocked=()=>res(null);}catch(e){res(null);}}),2000);return p;}
+  return{get:k=>db().then(d=>d&&wait(new Promise(res=>{try{const q=d.transaction('sculpt').objectStore('sculpt').get(k);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null);}catch(e){res(null);}}),2000)),
+    put:(k,v)=>db().then(d=>{if(d)try{d.transaction('sculpt','readwrite').objectStore('sculpt').put(v,k);}catch(e){}})};})();
+function fillGeo(j,r){const g=j.geo;g.setAttribute('position',new T.BufferAttribute(r.pos,3));g.setIndex(new T.BufferAttribute(r.idx,1));
+  g.computeVertexNormals();paint(g,j.prims,j.base,j.tint);g.computeBoundingSphere();}
+function runSculpts(prog){const jobs=SJ.splice(0),idle=[],queue=[],all=[];let done=0,url=null;
+  const local=j=>polyCore(makeSDF(j.prims),j.b[0],j.b[1],j.cell);
+  try{url=URL.createObjectURL(new Blob([WSRC],{type:'text/javascript'}));const n=Math.max(1,Math.min(4,(navigator.hardwareConcurrency||2)-1,jobs.length));
+    for(let i=0;i<n;i++){const w=new Worker(url);idle.push(w);all.push(w);}}catch(e){idle.length=0;}
+  function pump(){while(idle.length&&queue.length){const w=idle.pop(),q=queue.shift();
+    w.onmessage=e=>{idle.push(w);q.res(e.data);pump();};
+    w.onerror=e=>{e.preventDefault();q.res(local(q.j));};   /* a broken worker is dropped; its job runs here */
+    w.postMessage({prims:q.j.prims,lo:q.j.b[0],hi:q.j.b[1],cell:q.j.cell});}
+    if(!all.length)while(queue.length){const q=queue.shift();q.res(local(q.j));}}
+  const mesh=j=>new Promise(res=>{queue.push({j,res});pump();});
+  return Promise.all(jobs.map(j=>{const key=sculptKey(j);
+    return IDB.get(key).then(hit=>hit&&hit.pos&&hit.idx?hit:mesh(j).then(r=>{IDB.put(key,r);return r;}))
+      .then(r=>{fillGeo(j,r);done++;if(prog)prog(done,jobs.length);});}))
+    .finally(()=>{all.forEach(w=>w.terminate());if(url)URL.revokeObjectURL(url);});}
 function earPair(c,r,rot,depth,o){const e=new T.Matrix4().makeRotationFromEuler(new T.Euler(rot[0],rot[1],rot[2])).elements,nrm=[e[8],e[9],e[10]];
   return[E(c,r,Object.assign({sym:1,k:.05,rot},o||{})),E([c[0]+nrm[0]*depth,c[1]+nrm[1]*depth,c[2]+nrm[2]*depth],[r[0]*.8,r[1]*.82,r[2]*.95],{sym:1,sub:1,k:.025,rot})];}
 
@@ -97,41 +126,21 @@ const metal=(c,r)=>sm(c,{metalness:1,roughness:r===undefined?.28:r,envMapIntensi
 function M(geo,mat,sh){const m=new T.Mesh(geo,mat);m.castShadow=sh!==false;m.receiveShadow=true;return m;}
 function at(m,x,y,z,sx,sy,sz){m.position.set(x,y,z);if(sx!==undefined)m.scale.set(sx,sy===undefined?sx:sy,sz===undefined?sx:sz);return m;}
 
-/* ═════════ three surface techniques ═════════ */
-/* A · shell fur: the mesh is redrawn in layers pushed along the normal, each layer keeping fewer strands */
-function furMat(layer,o){const m=sm(0xffffff,{vertexColors:true,roughness:.7,envMapIntensity:.25});
-  m.onBeforeCompile=sh=>{sh.uniforms.uL={value:layer};sh.uniforms.uLen={value:o.len};sh.uniforms.uDen={value:o.den};sh.uniforms.uComb={value:new T.Vector3(o.comb[0],o.comb[1],o.comb[2])};
+/* ═════════ shell fur ═════════ */
+/* the mesh is redrawn in layers pushed along the normal, each layer keeping fewer strands */
+function furMat(layer,o){const m=sm(0xffffff,{vertexColors:true,roughness:.7,envMapIntensity:.25}),uL=m.userData.uL={value:layer};
+  m.onBeforeCompile=sh=>{sh.uniforms.uL=uL;sh.uniforms.uLen={value:o.len};sh.uniforms.uDen={value:o.den};sh.uniforms.uComb={value:new T.Vector3(o.comb[0],o.comb[1],o.comb[2])};
     sh.vertexShader='attribute float fur;uniform float uL,uLen;uniform vec3 uComb;varying vec3 vBase;varying float vFur;\n'+sh.vertexShader.replace('#include <begin_vertex>',
       '#include <begin_vertex>\nvBase=position;vFur=fur;vec3 cb=uComb-normal*dot(uComb,normal);transformed+=(normal*uL+cb*uL*uL)*uLen*fur;');
     sh.fragmentShader='uniform float uL,uDen;varying vec3 vBase;varying float vFur;\nfloat fh(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}\n'+sh.fragmentShader.replace('#include <color_fragment>',
       '#include <color_fragment>\nif(uL>0.){if(vFur<.04)discard;vec3 q=vBase*uDen;float r=fh(floor(q));float ln=.3+.7*r;if(uL>ln)discard;vec3 f=fract(q)-.5;if(length(f)>.66*(1.-uL/ln)+.07)discard;}\ndiffuseColor.rgb*=mix(.3,1.25,uL)*(.85+.3*fh(floor(vBase*uDen)+3.));');};
   return m;}
-function furPart(geo,o){const g=new T.Group();for(let i=0;i<=SHELLS;i++){const m=new T.Mesh(geo,furMat(i/SHELLS,o));m.castShadow=i===0;m.receiveShadow=true;g.add(m);}return g;}
-/* B · sculpted: one smooth mesh with tufts carved into the form and a velvet rim */
-function sheenMat(o){const m=sm(0xffffff,{vertexColors:true,roughness:.62,envMapIntensity:.4});
-  m.onBeforeCompile=sh=>{sh.fragmentShader=sh.fragmentShader.replace('#include <tonemapping_fragment>',
-    'float fr=pow(1.-clamp(dot(normalize(vNormal),normalize(vViewPosition)),0.,1.),2.2);float lum=dot(outgoingLight,vec3(.3,.6,.1));gl_FragColor.rgb+=fr*'+o.sheen.toFixed(2)+'*(diffuseColor.rgb*.9+.04)*(.12+lum*1.4);\n#include <tonemapping_fragment>');};
-  return m;}
-function sculptPart(geo,o){return M(geo,sheenMat(o));}
-/* C · tufts: thousands of blades planted on a dark body, combed along the fur flow */
-const bladeGeo=(function(){const g=new T.ConeGeometry(.5,1,3,1);g.translate(0,.5,0);const n=g.attributes.position.count,c=new Float32Array(n*3);
-  for(let i=0;i<n;i++){const v=.45+g.attributes.position.getY(i)*.9;c[i*3]=c[i*3+1]=c[i*3+2]=v;}g.setAttribute('color',new T.BufferAttribute(c,3));return g;})();
-function tuftPart(geo,o){const g=new T.Group(),base=sm(0xffffff,{vertexColors:true,roughness:.85});base.onBeforeCompile=sh=>{sh.fragmentShader=sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\ndiffuseColor.rgb*=.55;');};
-  g.add(M(geo,base));
-  const P=geo.attributes.position,N=geo.attributes.normal,Cc=geo.attributes.color,F=geo.attributes.fur,ix=geo.index.array,nt=ix.length/3,cum=new Float32Array(nt),a=new T.Vector3(),b=new T.Vector3(),c=new T.Vector3();
-  let tot=0;for(let t=0;t<nt;t++){a.fromBufferAttribute(P,ix[t*3]);b.fromBufferAttribute(P,ix[t*3+1]);c.fromBufferAttribute(P,ix[t*3+2]);tot+=b.sub(a).cross(c.sub(a)).length();cum[t]=tot;}
-  const cnt=Math.round(tot*o.per*(mobile?.65:1)),inst=new T.InstancedMesh(bladeGeo,sm(0xffffff,{vertexColors:true,roughness:.55,envMapIntensity:.5}),cnt),r=rnd(o.seed||9),
-    mt=new T.Matrix4(),q=new T.Quaternion(),up=new T.Vector3(0,1,0),dir=new T.Vector3(),sc=new T.Vector3(),ps=new T.Vector3(),cb=new T.Vector3(o.comb[0],o.comb[1],o.comb[2]),col=new T.Color();
-  let k=0;for(let i=0;i<cnt;i++){const x=r()*tot;let lo=0,hi=nt-1;while(lo<hi){const m=(lo+hi)>>1;if(cum[m]<x)lo=m+1;else hi=m;}
-    const i0=ix[lo*3],i1=ix[lo*3+1],i2=ix[lo*3+2];let u=r(),v=r();if(u+v>1){u=1-u;v=1-v;}const w=1-u-v,f=F.getX(i0)*w+F.getX(i1)*u+F.getX(i2)*v;if(f<.3)continue;
-    ps.set(P.getX(i0)*w+P.getX(i1)*u+P.getX(i2)*v,P.getY(i0)*w+P.getY(i1)*u+P.getY(i2)*v,P.getZ(i0)*w+P.getZ(i1)*u+P.getZ(i2)*v);
-    dir.set(N.getX(i0)*w+N.getX(i1)*u+N.getX(i2)*v,N.getY(i0)*w+N.getY(i1)*u+N.getY(i2)*v,N.getZ(i0)*w+N.getZ(i1)*u+N.getZ(i2)*v).normalize();
-    dir.multiplyScalar(.38).addScaledVector(cb,1.05);dir.x+=(r()-.5)*.4;dir.y+=(r()-.5)*.4;dir.z+=(r()-.5)*.4;dir.normalize();q.setFromUnitVectors(up,dir);
-    const L=o.len*(.5+r()*1.1)*f,W=o.w*(.6+r()*.8);sc.set(W,L,W);mt.compose(ps,q,sc);inst.setMatrixAt(k,mt);
-    const br=.7+r()*.7;col.setRGB((Cc.getX(i0)*w+Cc.getX(i1)*u+Cc.getX(i2)*v)*br,(Cc.getY(i0)*w+Cc.getY(i1)*u+Cc.getY(i2)*v)*br,(Cc.getZ(i0)*w+Cc.getZ(i1)*u+Cc.getZ(i2)*v)*br);inst.setColorAt(k,col);k++;}
-  inst.count=k;inst.instanceMatrix.needsUpdate=true;if(inst.instanceColor)inst.instanceColor.needsUpdate=true;inst.receiveShadow=true;g.add(inst);return g;}
-function skin(V,geo,o){return V.tech==='fur'?furPart(geo,o):V.tech==='sculpt'?sculptPart(geo,o):tuftPart(geo,o);}
-
+/* every fur part is built with SHELL_MAX shells; setShells(n) shows the first n+1 and respaces their layers */
+const FURS=[];let shellsNow=SHELL_MAX;
+function furPart(geo,o){const g=new T.Group();for(let i=0;i<=SHELL_MAX;i++){const m=new T.Mesh(geo,furMat(i/SHELL_MAX,o));m.castShadow=i===0;m.receiveShadow=true;g.add(m);}
+  FURS.push(g);if(shellsNow!==SHELL_MAX)shellGroup(g,shellsNow);return g;}
+function shellGroup(g,n){g.children.forEach((m,i)=>{m.visible=i<=n;if(i<=n)m.material.userData.uL.value=i/n;});}
+function setShells(n){shellsNow=n;FURS.forEach(g=>shellGroup(g,n));}
 /* tapered tube whose spine is rewritten every frame (tails) */
 function tailTube(nS,nR,col,furV,rad){const n=(nS+1)*nR,pos=new Float32Array(n*3),c=new Float32Array(n*3),f=new Float32Array(n).fill(furV),idx=[];
   for(let i=0;i<=nS;i++)for(let j=0;j<nR;j++){const q=(i*nR+j)*3,cc=typeof col==='function'?col(i/nS,j/nR):col;c[q]=cc[0];c[q+1]=cc[1];c[q+2]=cc[2];

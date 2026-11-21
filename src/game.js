@@ -96,7 +96,7 @@ function buildWorld(){
   const scene=W.scene=new T.Scene();scene.background=new T.Color(0x05070c);scene.fog=new T.Fog(0x070a12,9,40);
   scene.add(new T.HemisphereLight(0x3a4c70,0x14100c,.7));
   const key=W.key=new T.DirectionalLight(0x8fb2ff,1.1);key.castShadow=true;const sc=key.shadow.camera;sc.left=-13;sc.right=13;sc.top=13;sc.bottom=-13;sc.near=1;sc.far=50;
-  key.shadow.mapSize.set(mobile?1024:2048,mobile?1024:2048);key.shadow.bias=-.0004;key.shadow.normalBias=.04;scene.add(key);scene.add(key.target);
+  key.shadow.mapSize.set(1024,1024);key.shadow.bias=-.0004;key.shadow.normalBias=.04;scene.add(key);scene.add(key.target);
   const rim=new T.DirectionalLight(0x9fc0ff,.6);rim.position.set(-6,7,-6);scene.add(rim);
   const holeL=new T.PointLight(0xff8a2a,2.4,14,2);holeL.position.set(-3.2,1,-5.6);scene.add(holeL);
   W.fill=new T.PointLight(0xffc890,.55,11,2);scene.add(W.fill);
