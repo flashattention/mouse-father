@@ -61,7 +61,7 @@ function paint(geo,prims,base,tint){const P=geo.attributes.position,N=geo.attrib
    Meshing runs in Web Workers (one per spare core) and the raw mesh is cached in IndexedDB under a hash of the
    shape, so a second visit skips meshing entirely. Painting stays on the main thread because tints are closures. */
 const SJ=[];
-function sculpt(prims,cell,base,tint){prims.forEach(prep);const geo=new T.BufferGeometry();SJ.push({prims,cell,base,tint,geo,b:bounds(prims,cell*2.5)});return geo;}
+function sculpt(prims,cell,base,tint,rig){prims.forEach(prep);const geo=new T.BufferGeometry();SJ.push({prims,cell,base,tint,rig,geo,b:bounds(prims,cell*2.5)});return geo;}
 const WSRC=[pd,makeSDF,polyCore].map(f=>f.toString()).join('\n')+
   '\nonmessage=function(e){var d=e.data,r=polyCore(makeSDF(d.prims),d.lo,d.hi,d.cell);postMessage(r,[r.pos.buffer,r.idx.buffer]);};';
 function sculptKey(j){const g=j.prims.map(p=>[p.t,p.c,p.r,p.a,p.b,p.ra,p.rb,p.k,p.sym?1:0,p.sub?1:0,p.m]),s=JSON.stringify([j.cell,j.b,g]);
@@ -73,7 +73,7 @@ const IDB=(function(){let p=null;const wait=(pr,ms)=>Promise.race([pr,new Promis
   return{get:k=>db().then(d=>d&&wait(new Promise(res=>{try{const q=d.transaction('sculpt').objectStore('sculpt').get(k);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null);}catch(e){res(null);}}),2000)),
     put:(k,v)=>db().then(d=>{if(d)try{d.transaction('sculpt','readwrite').objectStore('sculpt').put(v,k);}catch(e){}})};})();
 function fillGeo(j,r){const g=j.geo;g.setAttribute('position',new T.BufferAttribute(r.pos,3));g.setIndex(new T.BufferAttribute(r.idx,1));
-  g.computeVertexNormals();paint(g,j.prims,j.base,j.tint);g.computeBoundingSphere();}
+  g.computeVertexNormals();paint(g,j.prims,j.base,j.tint);if(j.rig)skinWeights(g,j.prims,j.rig);g.computeBoundingSphere();}
 function runSculpts(prog){const jobs=SJ.splice(0),idle=[],queue=[],all=[];let done=0,url=null;
   const local=j=>polyCore(makeSDF(j.prims),j.b[0],j.b[1],j.cell);
   try{url=URL.createObjectURL(new Blob([WSRC],{type:'text/javascript'}));const n=Math.max(1,Math.min(4,(navigator.hardwareConcurrency||2)-1,jobs.length));
@@ -90,6 +90,33 @@ function runSculpts(prog){const jobs=SJ.splice(0),idle=[],queue=[],all=[];let do
     .finally(()=>{all.forEach(w=>w.terminate());if(url)URL.revokeObjectURL(url);});}
 function earPair(c,r,rot,depth,o){const e=new T.Matrix4().makeRotationFromEuler(new T.Euler(rot[0],rot[1],rot[2])).elements,nrm=[e[8],e[9],e[10]];
   return[E(c,r,Object.assign({sym:1,k:.05,rot},o||{})),E([c[0]+nrm[0]*depth,c[1]+nrm[1]*depth,c[2]+nrm[2]*depth],[r[0]*.8,r[1]*.82,r[2]*.95],{sym:1,sub:1,k:.025,rot})];}
+
+/* ═════════ auto skinning ═════════ */
+/* A primitive names its bone (bone:'chest', or bone:['shL','shR'] for a mirrored pair: first name on +x).
+   Each vertex is weighted by the same nearest-primitive falloff that paints it, only softer, so joints bend
+   smoothly where the sculpt blends. rig: {names, soft}. */
+function skinWeights(geo,prims,rig){const P=geo.attributes.position,n=P.count,names=rig.names,soft=rig.soft||20,add=prims.filter(p=>!p.sub),
+    si=new Uint16Array(n*4),sw=new Float32Array(n*4),acc=new Float32Array(names.length),ds=new Float32Array(add.length);
+  const bi=add.map(p=>{const b=p.bone||names[0],l=names.indexOf(Array.isArray(b)?b[0]:b),r=names.indexOf(Array.isArray(b)?b[1]:b);
+    if(l<0||r<0)throw new Error('unknown bone '+b);return[l,r];});
+  for(let i=0;i<n;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i);let dm=1e9;
+    for(let j=0;j<add.length;j++){ds[j]=pd(add[j],x,y,z);if(ds[j]<dm)dm=ds[j];}
+    acc.fill(0);for(let j=0;j<add.length;j++)acc[bi[j][x<0?1:0]]+=Math.exp(-(ds[j]-dm)*soft);
+    let tot=0;for(let k=0;k<4;k++){let b=0,v=0;for(let q=0;q<acc.length;q++)if(acc[q]>v){v=acc[q];b=q;}si[i*4+k]=b;sw[i*4+k]=v;acc[b]=0;tot+=v;}
+    for(let k=0;k<4;k++)sw[i*4+k]/=tot;}
+  geo.setAttribute('skinIndex',new T.Uint16BufferAttribute(si,4));geo.setAttribute('skinWeight',new T.Float32BufferAttribute(sw,4));}
+/* bones from absolute rest positions: defs [[name,parent|null,[x,y,z]],…]; the root goes under par.
+   top must be the character's outermost group, still at the origin, so bind space = character space. */
+function makeRig(defs,par,top,soft){const B={},abs={},list=[];
+  defs.forEach(d=>{const b=new T.Bone();b.name=d[0];abs[d[0]]=d[2];const pa=d[1]?abs[d[1]]:[0,0,0];
+    b.position.set(d[2][0]-pa[0],d[2][1]-pa[1],d[2][2]-pa[2]);b.userData.p0=b.position.clone();(d[1]?B[d[1]]:par).add(b);B[d[0]]=b;list.push(b);});
+  top.updateMatrixWorld(true);return{B,abs,names:defs.map(d=>d[0]),soft,skel:new T.Skeleton(list)};}
+/* two-bone leg IK in the side plane. Angles are "forward of straight down"; rotation.x = θ turns a bone back by θ.
+   S: hip/shoulder pivot (y,z) in body space, par: summed pitch of the parents, a1/a2: rest angles of the two bones. */
+function ik2(up,lo,Sy,Sz,ty,tz,L1,L2,a1,a2,par){const dz=tz-Sz,dy=ty-Sy;let d=Math.hypot(dz,dy);d=Math.min(Math.max(d,Math.abs(L1-L2)+1e-3),L1+L2-1e-3);
+  const cl=v=>Math.max(-1,Math.min(1,v)),phi=Math.atan2(dz,-dy),A1=Math.acos(cl((L1*L1+d*d-L2*L2)/(2*L1*d))),A2=Math.acos(cl((L2*L2+d*d-L1*L1)/(2*L2*d)));
+  up.rotation.x=a1-(phi-A1)-par;lo.rotation.x=a2-(phi+A2)-par-up.rotation.x;}
+const rotX=(y,z,t)=>[y*Math.cos(t)-z*Math.sin(t),y*Math.sin(t)+z*Math.cos(t)];
 
 /* ═════════ environment textures ═════════ */
 function cv(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c;}
@@ -128,8 +155,9 @@ function at(m,x,y,z,sx,sy,sz){m.position.set(x,y,z);if(sx!==undefined)m.scale.se
 
 /* ═════════ shell fur ═════════ */
 /* the mesh is redrawn in layers pushed along the normal, each layer keeping fewer strands */
-function furMat(layer,o){const m=sm(0xffffff,{vertexColors:true,roughness:.7,envMapIntensity:.25}),uL=m.userData.uL={value:layer};
-  m.onBeforeCompile=sh=>{sh.uniforms.uL=uL;sh.uniforms.uLen={value:o.len};sh.uniforms.uDen={value:o.den};sh.uniforms.uComb={value:new T.Vector3(o.comb[0],o.comb[1],o.comb[2])};
+function furMat(layer,o,skinned){const m=sm(0xffffff,{vertexColors:true,roughness:.7,envMapIntensity:.25}),uL=m.userData.uL={value:layer},uLen=m.userData.uLen={value:o.len};
+  m.skinning=!!skinned;   /* fur is pushed out in bind space (begin_vertex), then skinned with the body */
+  m.onBeforeCompile=sh=>{sh.uniforms.uL=uL;sh.uniforms.uLen=uLen;sh.uniforms.uDen={value:o.den};sh.uniforms.uComb={value:new T.Vector3(o.comb[0],o.comb[1],o.comb[2])};
     sh.vertexShader='attribute float fur;uniform float uL,uLen;uniform vec3 uComb;varying vec3 vBase;varying float vFur;\n'+sh.vertexShader.replace('#include <begin_vertex>',
       '#include <begin_vertex>\nvBase=position;vFur=fur;vec3 cb=uComb-normal*dot(uComb,normal);transformed+=(normal*uL+cb*uL*uL)*uLen*fur;');
     sh.fragmentShader='uniform float uL,uDen;varying vec3 vBase;varying float vFur;\nfloat fh(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}\n'+sh.fragmentShader.replace('#include <color_fragment>',
@@ -137,7 +165,8 @@ function furMat(layer,o){const m=sm(0xffffff,{vertexColors:true,roughness:.7,env
   return m;}
 /* every fur part is built with SHELL_MAX shells; setShells(n) shows the first n+1 and respaces their layers */
 const FURS=[];let shellsNow=SHELL_MAX;
-function furPart(geo,o){const g=new T.Group();for(let i=0;i<=SHELL_MAX;i++){const m=new T.Mesh(geo,furMat(i/SHELL_MAX,o));m.castShadow=i===0;m.receiveShadow=true;g.add(m);}
+function furPart(geo,o,skel){const g=new T.Group();for(let i=0;i<=SHELL_MAX;i++){const mat=furMat(i/SHELL_MAX,o,!!skel),m=skel?new T.SkinnedMesh(geo,mat):new T.Mesh(geo,mat);
+    if(skel){m.bind(skel,new T.Matrix4());m.frustumCulled=false;}m.castShadow=i===0;m.receiveShadow=true;g.add(m);}
   FURS.push(g);if(shellsNow!==SHELL_MAX)shellGroup(g,shellsNow);return g;}
 function shellGroup(g,n){g.children.forEach((m,i)=>{m.visible=i<=n;if(i<=n)m.material.userData.uL.value=i/n;});}
 function setShells(n){shellsNow=n;FURS.forEach(g=>shellGroup(g,n));}

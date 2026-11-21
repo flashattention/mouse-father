@@ -100,6 +100,10 @@ const T=window.THREE,canvas=document.getElementById('stage'),$=i=>document.getEl
 if(!T){$('err').style.display='grid';$('intro').classList.remove('show');return;}
 let renderer;
 try{renderer=new T.WebGLRenderer({canvas,antialias:false,powerPreference:'high-performance'});}catch(e){$('err').style.display='grid';$('intro').classList.remove('show');return;}
+/* a lost GPU context (tab backgrounded on a phone, driver reset) comes back blank: reload once it is restored —
+   the sculpt cache makes that quick. At most twice per session so a failing GPU cannot loop. */
+canvas.addEventListener('webglcontextlost',e=>e.preventDefault());
+canvas.addEventListener('webglcontextrestored',()=>{let n=0;try{n=+sessionStorage.getItem('mf.reload')||0;sessionStorage.setItem('mf.reload',n+1);}catch(_){}if(n<2)location.reload();});
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
 const touch=('ontouchstart' in window)||(window.matchMedia&&matchMedia('(pointer:coarse)').matches);
 const mobile=touch||Math.min(innerWidth,innerHeight)<700;
