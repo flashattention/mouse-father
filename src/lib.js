@@ -189,3 +189,8 @@ function whiskers(par,roots,len,rad,spread){const mat=sm(0xbfb9ae,{emissive:0x10
     const cu=new T.QuadraticBezierCurve3(new T.Vector3(r[0],r[1],r[2]),new T.Vector3(r[0]+s*l*.5,r[1]+a*l*.4+l*.05,r[2]+l*.12),new T.Vector3(r[0]+s*l,r[1]+a*l-l*.08,r[2]-l*.1));
     par.add(M(new T.TubeGeometry(cu,8,rad,3,false),mat,false));}});}
 
+/* the father's cape: coarse wool, darker and frayed toward the hem, a few mended patches */
+function capeTex(){const c=cv(128,128),g=c.getContext('2d'),r=rnd(12),gr=g.createLinearGradient(0,0,0,128);gr.addColorStop(0,'#5e1c18');gr.addColorStop(1,'#2c0b0a');g.fillStyle=gr;g.fillRect(0,0,128,128);
+  for(let y=0;y<128;y+=2){g.fillStyle='rgba(0,0,0,'+(.06+r()*.08)+')';g.fillRect(0,y,128,1);}for(let x=0;x<128;x+=2){g.fillStyle='rgba(255,200,180,'+(.02+r()*.04)+')';g.fillRect(x,0,1,128);}
+  g.fillStyle='rgba(90,60,40,.55)';g.fillRect(20,52,18,14);g.strokeStyle='rgba(220,190,150,.5)';g.setLineDash([2,2]);g.strokeRect(20,52,18,14);
+  g.fillStyle='rgba(40,20,30,.5)';g.fillRect(84,30,14,12);g.strokeRect(84,30,14,12);return tex(c);}

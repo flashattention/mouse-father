@@ -45,7 +45,7 @@ function buildMouse(){
   const es=new T.Shape();es.moveTo(-.1,-.14);es.lineTo(-.1,.03);es.absarc(0,.03,.1,Math.PI,0,true);es.lineTo(.1,-.14);
   sh.add(at(new T.Mesh(new T.ShapeGeometry(es,12),new T.MeshBasicMaterial({color:0xff9a2a,fog:false})),0,0,.047));
   const sc=M(new T.TorusGeometry(.2,.065,10,24),sm(0x6e1a1a,{roughness:1}));sc.rotation.x=Math.PI/2;at(sc,0,.08,.02,1,1,.75);B.neck.add(sc);
-  const cpg=new T.PlaneGeometry(.85,1,8,12);R.cape=M(cpg,sm(0x6e1a1a,{roughness:1,side:T.DoubleSide,alphaMap:capeAlpha(),alphaTest:.5}));R.cape.position.set(0,.36,-.2);B.chest.add(R.cape);R.capeBase=Float32Array.from(cpg.attributes.position.array);
+  const cpg=new T.PlaneGeometry(.85,1,16,14);R.cape=M(cpg,sm(0xffffff,{map:capeTex(),roughness:.95,side:T.DoubleSide,alphaMap:capeAlpha(),alphaTest:.5}));R.cape.position.set(0,.36,-.2);B.chest.add(R.cape);R.capeBase=Float32Array.from(cpg.attributes.position.array);
   const st=M(new T.TorusGeometry(.3,.022,6,30),sm(0x3a2618,{roughness:.7}));st.rotation.set(1.2,.5,0);at(st,0,.08,.02,1,1.15,1);B.chest.add(st);
   R.slash=new T.Mesh(new T.RingGeometry(.6,1.5,28,1,-.5,2.3),new T.MeshBasicMaterial({color:0xcfe0ff,transparent:true,opacity:0,side:T.DoubleSide,blending:T.AdditiveBlending,depthWrite:false,fog:false}));
   R.slash.position.set(-.3,.75,.35);R.slash.rotation.y=-Math.PI/2+.25;U.add(R.slash);
@@ -91,17 +91,45 @@ function buildCat(){
   const col=M(new T.TorusGeometry(.2,.022,8,30),sm(0x7a1818,{roughness:.6}));col.rotation.x=1.05;at(col,0,.15,.12);B.neck.add(col);B.neck.add(at(M(new T.SphereGeometry(.045,14,10),metal(0xd9a520,.25)),0,.01,.3));
   return R;}
 
-function buildTrap(){const g=new T.Group(),met=metal(0xcfd6e0,.3);g.add(at(M(new T.BoxGeometry(1.7,.09,.9),sm(0x6a5238)),0,.045,0));
+/* a spring trap: grained pine board, coiled spring on the pivot, bent-wire kill bar, staples, hold-down bar and trigger */
+function buildTrap(){const g=new T.Group(),met=sm(0xb8b2a6,{metalness:1,roughness:.42,envMapIntensity:.55}),dark=sm(0x6a645c,{metalness:1,roughness:.6,envMapIntensity:.5}),wood=sm(0xffffff,{map:trapWood(),roughness:.78});
+  g.add(at(M(new T.BoxGeometry(1.7,.09,.9),wood),0,.045,0));
+  [[-.72,.36],[-.72,-.36],[.7,.36],[.7,-.36]].forEach(q=>g.add(at(M(new T.CylinderGeometry(.022,.022,.012,10),dark),q[0],.095,q[1])));
+  const tube=(pts,r,seg)=>new T.TubeGeometry(new T.CatmullRomCurve3(pts.map(p=>new T.Vector3(p[0],p[1],p[2]))),seg||40,r,8,false);
   const pv=new T.Group();pv.position.set(0,.12,0);g.add(pv);
-  const rod=(l,x,z,ry)=>{const c=M(new T.CylinderGeometry(.024,.024,l,8),met);c.rotation.z=Math.PI/2;c.rotation.y=ry||0;at(c,x,0,z);pv.add(c);};
-  rod(.8,-.74,0,Math.PI/2);rod(.74,-.37,-.38);rod(.74,-.37,.38);
-  for(let i=0;i<6;i++){const t=M(new T.TorusGeometry(.07,.016,6,16),met);t.rotation.y=Math.PI/2;at(t,0,.14,-.2+i*.08);g.add(t);}
-  g.add(at(M(new T.BoxGeometry(.34,.02,.26),met),.42,.1,0));
+  pv.add(M(tube([[0,0,-.36],[-.62,0,-.38],[-.72,0,-.34],[-.74,0,0],[-.72,0,.34],[-.62,0,.38],[0,0,.36]],.021,60),met));
+  const hp=[];for(let i=0;i<=140;i++){const a=i/140*6.283*8,z=-.27+.54*i/140;hp.push([Math.cos(a)*.055,Math.sin(a)*.055,z]);}
+  g.add(at(M(tube(hp,.011,280),met),0,.12,0));
+  [-.27,.27].forEach(z=>g.add(M(tube([[0,.12,z],[.12,.07,z*1.15],[.32,.1,z*1.2],[.34,.1,z*.6]],.011,20),met)));
+  [-.33,-.1,.1,.33].forEach(z=>{const st=M(new T.TorusGeometry(.04,.009,6,12,Math.PI),dark);st.position.set(0,.09,z);g.add(st);});
+  const hold=M(new T.CylinderGeometry(.011,.011,1.06,6),met);hold.rotation.z=Math.PI/2-.06;at(hold,-.22,.145,0);g.add(hold);
+  g.add(at(M(new T.BoxGeometry(.34,.018,.26),met),.42,.1,0));g.add(at(M(new T.BoxGeometry(.05,.05,.05),dark),.3,.12,0));
   const s=new T.Shape();s.moveTo(0,0);s.lineTo(.36,0);s.lineTo(0,.24);s.lineTo(0,0);
-  const bait=M(new T.ExtrudeGeometry(s,{depth:.22,bevelEnabled:false}),sm(0xe0ac28,{roughness:.6,emissive:0x3a2600}));at(bait,.3,.11,-.11);g.add(bait);
-  return{g,pv,bait};}
-function buildHuman(){const g=new T.Group();g.add(at(M(new T.SphereGeometry(1,28,20),sm(0x4a3040)),0,.62,0,1.25,.62,2.5));g.add(at(M(new T.BoxGeometry(2.3,.18,4.9),sm(0x16120f)),0,.09,0));
-  g.add(at(M(new T.CylinderGeometry(.72,.8,24,24),sm(0x1b2030)),0,12.6,-1.1));g.add(at(M(new T.CylinderGeometry(.9,.9,.5,24),sm(0x1b2030)),0,1.25,-1.1));return g;}
+  const bait=M(new T.ExtrudeGeometry(s,{depth:.22,bevelEnabled:true,bevelSize:.01,bevelThickness:.01,bevelSegments:1}),sm(0xe0ac28,{roughness:.6,emissive:0x3a2600}));at(bait,.3,.11,-.11);g.add(bait);
+  return{g,pv,bait,hold};}
+function trapWood(){if(trapWood.t)return trapWood.t;const c=cv(256,128),x=c.getContext('2d'),r=rnd(31),gr=x.createLinearGradient(0,0,0,128);gr.addColorStop(0,'#b88a58');gr.addColorStop(1,'#9c7044');x.fillStyle=gr;x.fillRect(0,0,256,128);
+  for(let i=0;i<54;i++){const y=r()*128,a=1.5+r()*5,f=.008+r()*.03,ph=r()*6;x.strokeStyle=r()>.45?'rgba(84,50,22,.38)':'rgba(230,190,140,.16)';x.lineWidth=.5+r()*1.6;x.beginPath();
+    for(let k=0;k<=256;k+=4){const yy=y+Math.sin(k*f+ph)*a+Math.sin(k*.11+i)*.6;k?x.lineTo(k,yy):x.moveTo(k,yy);}x.stroke();}
+  [[70,50],[190,88]].forEach(q=>{const k=x.createRadialGradient(q[0],q[1],1,q[0],q[1],12);k.addColorStop(0,'rgba(60,30,10,.85)');k.addColorStop(1,'rgba(60,30,10,0)');x.fillStyle=k;x.beginPath();x.ellipse(q[0],q[1],16,7,0,0,7);x.fill();});
+  x.fillStyle='rgba(30,18,8,.25)';for(let i=0;i<30;i++)x.fillRect(r()*256,r()*128,2+r()*8,1);return trapWood.t=tex(c);}
+/* the human: a foot in a worn wool sock (sculpted, fuzzy shells), heel and toe in a darker yarn, ribbed cuff,
+   a darned patch; a trouser leg rises out of frame. Sculpted at foot length 1 and scaled up. */
+function buildHuman(){const g=new T.Group(),S=5;g.rotation.order='YXZ';
+  const prims=[E([0,.13,-.37],[.16,.14,.15],{k:.1}),E([0,.12,-.05],[.19,.11,.32],{k:.14}),E([0,.1,.24],[.215,.095,.16],{k:.1}),E([0,.2,-.02],[.14,.1,.28],{k:.12}),
+    E([-.115,.068,.43],[.064,.058,.08],{k:.05}),E([-.035,.06,.425],[.046,.05,.064],{k:.04}),E([.035,.056,.405],[.042,.046,.058],{k:.04}),E([.095,.052,.375],[.038,.042,.052],{k:.04}),E([.148,.048,.335],[.034,.038,.046],{k:.04}),
+    C([0,.16,-.24],[0,.6,-.23],.135,.125,{k:.12}),E([0,-.6,0],[1.4,.6,1.4],{sub:1,k:.025})];
+  const wool=hx(0xa49a8a),toe=hx(0x6a5a4e),darn=hx(0xb08a5a);
+  const tint=(x,y,z,nx,ny,nz,o)=>{let c=o.c;const tz=sst(.3,.36,z)+sst(-.3,-.36,z)*sst(.26,.14,y);c=mix3(c,toe,Math.min(1,tz));
+    if(y>.44){const rib=Math.sin(Math.atan2(x,z+.23)*22);c=mix3(c,[c[0]*.72,c[1]*.72,c[2]*.72],.5+.5*rib);}
+    const d=hyp(x-.17,y-.13,z-.02);if(d<.07){c=mix3(c,darn,sst(.07,.04,d));}if(y<.02)c=[c[0]*.6,c[1]*.6,c[2]*.6];o.c=c;};
+  const foot=furPart(sculpt(prims,.012,wool,tint,null),{len:.0085,den:420,comb:[0,-.3,0]});foot.scale.setScalar(S);g.add(foot);
+  const tg=new T.CylinderGeometry(.95,1.08,26,40,24,true),tp=tg.attributes.position;
+  for(let i=0;i<tp.count;i++){const x=tp.getX(i),y=tp.getY(i),z=tp.getZ(i),a=Math.atan2(z,x),k=1+.035*Math.sin(a*7+y*.25)+.05*Math.max(0,1-(y+13)/3)*Math.sin(a*3+1);tp.setX(i,x*k);tp.setZ(i,z*k);}tg.computeVertexNormals();
+  const tr=M(tg,sm(0xffffff,{map:twillTex(),roughness:.92,side:T.DoubleSide}));tr.position.set(0,2.55+13,-1.15);g.add(tr);
+  const hem=M(new T.TorusGeometry(1.1,.07,8,40),sm(0x232530,{roughness:.95}));hem.rotation.x=Math.PI/2;hem.position.set(0,2.58,-1.15);g.add(hem);
+  return g;}
+function twillTex(){const c=cv(128,128),x=c.getContext('2d');x.fillStyle='#262a36';x.fillRect(0,0,128,128);x.strokeStyle='rgba(255,255,255,.06)';x.lineWidth=1.4;
+  for(let i=-128;i<256;i+=5){x.beginPath();x.moveTo(i,0);x.lineTo(i+128,128);x.stroke();}x.fillStyle='rgba(0,0,0,.18)';const r=rnd(8);for(let i=0;i<90;i++)x.fillRect(r()*128,r()*128,1+r()*3,1);return tex(c,3,10);}
 
 /* ═════════ world ═════════ */
 const HOME={x:-3.2,z:-6.2},BX=15,BZ0=-6.1,BZ1=25,HS=1.5;
@@ -248,7 +276,7 @@ function updatePlayer(dt){
     if(t.state===2&&!t.got&&hyp(P.x-t.bx,P.z-t.bz)<1.25){t.got=true;t.bait.visible=false;getFood();}});
   if(G.food>=G.quota&&hyp(P.x-HOME.x,P.z-HOME.z)<1.7){if(G.catGone)finish(true);else if(G.t>G.msgT)toast('고양이를 달고 집에 들어갈 수는 없다.',2);}
   if(!Ct.awake&&hyp(P.x-Ct.x,P.z-Ct.z)<5.2&&P.sp>3)wakeCat(false);}
-function updateTraps(){W.traps.forEach(t=>{if(t.state===1){const k=Math.min(1,(G.t-t.t0)/.1);t.pv.rotation.z=-2.85*k;if(k>=1)t.state=2;}});}
+function updateTraps(){W.traps.forEach(t=>{t.hold.visible=t.state===0&&t.g.visible;if(t.state===1){const k=Math.min(1,(G.t-t.t0)/.1);t.pv.rotation.z=-2.85*k;if(k>=1)t.state=2;}});}
 function updateHuman(dt){const H=Hm,e=G.t-H.t0,hm=W.human,fx=Math.sin(H.yaw),fz=Math.cos(H.yaw);
   if(H.state==='wait'){if(Ct.awake&&!G.catGone)H.t0=G.t;else if(e>H.next){const r=Math.random;if(P.z>1&&r()<.45){H.tx=P.x+P.vx*.6;H.tz=P.z+P.vz*.6;}else{H.tx=(r()-.5)*22;H.tz=3+r()*15;}
       H.tx=Math.max(-12,Math.min(12,H.tx));H.tz=Math.max(2.5,Math.min(22,H.tz));H.yaw=(r()-.5)*1.2;H.state='warn';H.t0=G.t;}}
@@ -257,6 +285,8 @@ function updateHuman(dt){const H=Hm,e=G.t-H.t0,hm=W.human,fx=Math.sin(H.yaw),fz=
       if(hyp(P.x-H.tx,P.z-H.tz)<2.6&&hurt(2,H.tx,H.tz,false))toast('밟혔다!',1.4);}}
   else if(H.state==='hold'){hm.position.y=0;if(e>.7){H.state='rise';H.t0=G.t;}}
   else if(H.state==='rise'){const k=e/1.1;hm.position.y=16*k*k;W.hShadow.material.opacity=.5*(1-k);if(k>=1){H.state='wait';H.t0=G.t;H.next=3.2+Math.random()*2.8;hm.position.y=30;W.hShadow.material.opacity=0;}}
+  /* the foot lands toes-first-ish and peels off heel-first, pivoting on the toes so nothing sinks into the floor */
+  const tilt=H.state==='fall'?-.1*(1-Math.min(1,e/.24)):H.state==='rise'?.32*Math.min(1,e/.35):0;hm.rotation.x=tilt;if(H.state==='rise'||H.state==='fall')hm.position.y+=Math.abs(Math.sin(tilt))*2.4;
   hm.rotation.y=H.yaw;W.hShadow.position.set(H.tx,.03,H.tz);W.hRing.position.set(H.tx,.035,H.tz);}
 function updateCat(dt){
   if(!W.cat.g.visible)return;const e=G.t-Ct.t0,dx=P.x-Ct.x,dz=P.z-Ct.z,dist=hyp(dx,dz),want=Math.atan2(dx,dz),y0=Ct.yaw,turn=r=>{Ct.yaw+=Math.max(-r*dt,Math.min(r*dt,angd(want,Ct.yaw)));};
@@ -371,7 +401,7 @@ function animHero(dt){const H=W.hero,B=H.B,U=H.U,t=G.t,play=G.state==='play',win
     const th=i?B.thighR:B.thighL,pz=-.02,py=.42+hy;th.rotation.x=-Math.atan2(f.position.z-pz,py-f.position.y)-hrx+thx;});
   chain(H.tailT,new T.Vector3(mBase.x,mBase.y+hy,mBase.z),.05,.15,-.45,i=>.085*(1-run*.8)+Math.sin(t*(1.4+run*8)-i*.3)*(.035+run*.03)*(1-dk),i=>i>22?.09:0,.05);
   const ca=H.cape.geometry.attributes.position,cb=H.capeBase,flp=1+run*1.6;
-  for(let i=0;i<ca.count;i++){const x=cb[i*3],y=cb[i*3+1],v=.5-y;ca.setXYZ(i,x*(.7+v*.65),-v*(1-run*.25),-(.02+v*(.45+run*.35))-Math.sin(t*2.4*flp+v*4.5+x*2.5)*.07*v*flp-Math.abs(x)*.28*(1-v));}
+  for(let i=0;i<ca.count;i++){const x=cb[i*3],y=cb[i*3+1],v=.5-y;ca.setXYZ(i,x*(.7+v*.65),-v*(1-run*.25),-(.02+v*(.45+run*.35))-Math.sin(t*2.4*flp+v*4.5+x*2.5)*.07*v*flp-Math.abs(x)*.28*(1-v)-Math.cos(x*15)*.02*(.3+v));}   /* + vertical folds */
   ca.needsUpdate=true;H.cape.geometry.computeVertexNormals();H.cape.rotation.x=-.85*crx;   /* hang from the shoulders, not from the leaning chest */
   H.armR.rotation.set(ax,ay,az);H.sword.rotation.set(sx,0,sz);
   const la=-.9*pk;H.armL.rotation.set(((-.5+sw)*(1-b)-1.2*b)*(1-dk)+la+.1*dk,(-.1*(1-b)-.45*b)*(1-dk),(.35*(1-b)+.05*b)*(1-dk)+.1*dk);H.shield.rotation.x=.5*(1-b)+1.2*b;
