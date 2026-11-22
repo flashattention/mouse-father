@@ -3,7 +3,7 @@
    and hero. Music is original, rendered offline by tools/compose_bgm.py into audio/*.mp3 — looped tracks
    carry a wrap-around pad, so the loop points below are seamless. audioTick() diffs the game state each
    frame and fires sounds on changes, so game.js needs no sound calls. */
-const BGM={night:{loop:[.25,60.25],vol:.75},cat:{loop:[.25,40.25],vol:.8},home:{vol:.9},fall:{vol:.85}};
+const BGM={night:{loop:[.25,60.25],vol:.75},cat:{loop:[.25,40.25],vol:.8},home:{vol:.9},fall:{vol:.85},rain:{loop:[.25,64.25],vol:.75}};
 const AU={ctx:null,on:true,raw:{},buf:{},mus:null,want:null,S:null,clock:0,tk:0};
 try{if(localStorage.getItem('mf.sound')==='0')AU.on=false;}catch(e){}
 for(const k in BGM)AU.raw[k]=fetch('audio/'+k+'.mp3').then(r=>r.ok?r.arrayBuffer():null).catch(()=>null);
@@ -28,6 +28,11 @@ function audioInit(){
   const hp=aPan(13,1.5,23,5),hg=c.createGain();hg.gain.value=.05;hg.connect(hp);
   [[50,1],[100,.5],[150,.18]].forEach(h=>{const o=c.createOscillator(),g=c.createGain();o.frequency.value=h[0];g.gain.value=h[1];o.connect(g);g.connect(hg);o.start();});
   const hn=c.createBufferSource();hn.buffer=nb;hn.loop=true;const hf=c.createBiquadFilter();hf.type='lowpass';hf.frequency.value=160;const hng=c.createGain();hng.gain.value=.5;hn.connect(hf);hf.connect(hng);hng.connect(hg);hn.start();
+  /* rain on the roof: a hiss and a low rumble, faded in on rainy nights */
+  const rn=c.createBufferSource();rn.buffer=nb;rn.loop=true;const rf=c.createBiquadFilter();rf.type='bandpass';rf.frequency.value=2200;rf.Q.value=.35;
+  const rn2=c.createBufferSource();rn2.buffer=nb;rn2.loop=true;rn2.playbackRate.value=.73;const rf2=c.createBiquadFilter();rf2.type='lowpass';rf2.frequency.value=320;const rg2=c.createGain();rg2.gain.value=1.6;
+  AU.rain=c.createGain();AU.rain.gain.value=0;AU.rainF=c.createBiquadFilter();AU.rainF.type='lowpass';AU.rainF.frequency.value=9000;
+  rn.connect(rf);rf.connect(AU.rain);rn2.connect(rf2);rf2.connect(rg2);rg2.connect(AU.rain);AU.rain.connect(AU.rainF);AU.rainF.connect(AU.sfx);rn.start();rn2.start();
   for(const k in BGM)AU.raw[k].then(ab=>{if(!ab)return;c.decodeAudioData(ab,b=>{AU.buf[k]=b;if(AU.want===k&&!AU.mus)playMusic(k,1.5);},()=>{});});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)c.suspend();else if(AU.on)c.resume();});
   AU.clock=c.currentTime+1;}
@@ -89,6 +94,14 @@ const SFX={
   tick(p,hi){const t=AU.ctx.currentTime,o=aOut(p,.5,.4);aNz(o,t,'bandpass',hi?3600:2700,0,9,.014,.11);aOsc(o,t,'sine',hi?2100:1650,0,.012,.04);},
   cough(p){const t=AU.ctx.currentTime,o=aOut(p,.3,.8);[0,.2].forEach((d,i)=>{aNz(o,t+d,'bandpass',1100-i*200,600,2.5,.13,.22-.07*i,.01);aOsc(o,t+d,'triangle',520-i*60,300,.09,.05,.005);});},
   crackle(p){const t=AU.ctx.currentTime,o=aOut(p,.1,.2);aNz(o,t,'highpass',3500,3500,1,.012,aR(.03,.08));},
+  plip(p){const t=AU.ctx.currentTime,o=aOut(p,.3,.5),f=aR(900,1400);aOsc(o,t,'sine',f,f*2.2,.06,.07,.002);aNz(o,t,'bandpass',3000,1500,3,.03,.03);},
+  splash(p,v){const t=AU.ctx.currentTime,o=aOut(p,.1,.4);aNz(o,t,'bandpass',aR(900,1300),500,1.2,.12,.05+.06*v,.01);aNz(o,t+.03,'highpass',4000,4000,1,.08,.02+.03*v,.01);},
+  thunder(){const t=AU.ctx.currentTime,o=aOut(null,.5,5);aNz(o,t,'lowpass',900,60,.7,3.6,.55,.04);aNz(o,t+.05,'lowpass',200,40,1,4.2,.6,.5);aOsc(o,t,'sine',48,30,3,.25,.6);},
+  glue(p){const t=AU.ctx.currentTime,o=aOut(p,.1,.6);aNz(o,t,'lowpass',700,240,3,.3,.4,.02);aOsc(o,t,'sine',180,70,.25,.2);},
+  rip(p){const t=AU.ctx.currentTime,o=aOut(p,.15,.6);for(let k=0;k<5;k++)aNz(o,t+k*.03,'bandpass',aR(1500,3000),800,2,.05,.18,.003);},
+  crash(p){const t=AU.ctx.currentTime,o=aOut(p,.5,2);aOsc(o,t,'sine',70,32,.6,.9);aNz(o,t,'lowpass',1200,200,1,.4,.6);aNz(o,t+.02,'bandpass',500,300,4,.5,.25,.01);SFX.bell(p,.12);
+    aMeow(o,t+.15,[500,700,420,300],[800,1200,700,500],.6,.25);},
+  swipe(p){const t=AU.ctx.currentTime,o=aOut(p,.15,.6);aNz(o,t,'bandpass',1500,400,1.6,.22,.5,.05);},
   family(list){const t=AU.ctx.currentTime;list.forEach((q,i)=>{for(let k=0;k<2;k++){const d=i*.18+k*aR(.25,.45),o=aOut([q[0],q[1],q[2],3],.25,d+.5),f=(i?3300:2600)*aR(.95,1.08);
     aOsc(o,t+d,'sine',f,f*1.25,.07,.06,.008);aOsc(o,t+d+.09,'sine',f*1.1,f*1.35,.06,.05,.008);}});}
 };
@@ -102,7 +115,7 @@ function playMusic(name,fade){const c=AU.ctx,t=c.currentTime;
 
 /* ── per-frame: listener, ambience, and sounds for whatever changed since last frame ── */
 const _af=new T.Vector3();
-function aSnap(){return{st:G.state,atk:P.atk,dash:P.dash>0,hurt:P.hurtT,blk:P.blkT,pick:P.pickT,cs:Ct.state,ct0:Ct.t0,aw:Ct.awake,hp:Ct.hp,cy:Ct.y,hs:Hm.state,
+function aSnap(){return{gl:!!P.glue,st:G.state,atk:P.atk,dash:P.dash>0,hurt:P.hurtT,blk:P.blkT,pick:P.pickT,cs:Ct.state,ct0:Ct.t0,aw:Ct.awake,hp:Ct.hp,cy:Ct.y,hs:Hm.state,
   tr:W.traps.map(t=>t.state),ph:Math.floor(P.ph*2),cph:Math.floor(Ct.an.ph*4)};}
 function audioTick(){const s=aSnap(),o=AU.S;AU.S=s;const c=AU.ctx;if(!c||c.state!=='running'||!o)return;const t=c.currentTime,L=c.listener;
   /* listener: between camera and hero, facing where the camera looks */
@@ -111,10 +124,11 @@ function audioTick(){const s=aSnap(),o=AU.S;AU.S=s;const c=AU.ctx;if(!c||c.state
   else{L.setPosition(lx,ly,lz);L.setOrientation(_af.x,_af.y,_af.z,0,1,0);}
   const H=[P.x,.6,P.z],sy=Math.sin(Ct.yaw),cy=Math.cos(Ct.yaw),C=[Ct.x+sy*1.8,Ct.y+3,Ct.z+cy*1.8,5],cv=W.cat.g.visible;
   aPos(AU.purrP,C[0],C[1],C[2]);
+  const rainy=CH[G.ch].rain&&s.st!=='intro'||CH[G.ch].rain&&W.cur===W.home;AU.rain.gain.setTargetAtTime(rainy?(W.cur===W.home?.16:.3):0,t,.8);AU.rainF.frequency.setTargetAtTime(W.cur===W.home?1400:9000,t,.3);
   const pt=cv&&Ct.state==='doze'?.32*(.45+.55*Math.abs(Math.sin(t*Math.PI/1.7))):0;AU.purr.gain.setTargetAtTime(pt,t,.12);
   if(W.cur===W.home&&Math.random()<.012)SFX.crackle([HM.candle[0],HM.top+.6,HM.candle[1],2]);
   if(t>AU.clock+.5)AU.clock=t;if(t>=AU.clock){AU.clock+=1;SFX.tick([-15,9,24,6],AU.tk^=1);}   /* a wall clock, far corner */
-  const want=s.st==='cut'?CUT.music:s.st==='play'?(Ct.awake&&!G.catGone?'cat':'night'):s.st==='win'?'home':s.st==='dead'?'fall':null;
+  const want=s.st==='cut'?CUT.music:s.st==='play'?(Ct.awake&&!G.catGone?'cat':CH[G.ch].music):s.st==='win'?'home':s.st==='dead'?'fall':null;
   if(want!==AU.want){const f=want==='fall'?.3:want==='cat'?1.2:AU.want==='cat'?3:1.5;AU.want=want;playMusic(want,f);}
   if(s.st!==o.st){if(s.st==='dead')SFX.fall(H);}
   if(o.st==='play'){
@@ -122,14 +136,15 @@ function audioTick(){const s=aSnap(),o=AU.S;AU.S=s;const c=AU.ctx;if(!c||c.state
     if(s.dash&&!o.dash)SFX.roll(H);
     if(s.blk!==o.blk)SFX.clank(H);
     if(s.hurt!==o.hurt)SFX.hurt(H);
-    if(s.pick!==o.pick)SFX.pick(H,G.food>=QUOTA);
+    if(s.gl&&!o.gl)SFX.glue(H);if(!s.gl&&o.gl)SFX.rip(H);
+    if(s.pick!==o.pick)SFX.pick(H,G.food>=G.quota);
     s.tr.forEach((v,i)=>{if(v===1&&o.tr[i]===0){const q=W.traps[i];SFX.snap([q.x,.3,q.z]);}});
     if(s.hp<o.hp)SFX.catHit(C,s.hp<=0);
     else if(s.aw&&!o.aw)SFX.wake(C);
-    if(s.cs!==o.cs||(s.cs==='leap'&&s.ct0!==o.ct0)){const f={tele:SFX.hiss,pounce:SFX.pounce,bitewind:SFX.growl,bite:SFX.jaw,leap:SFX.pounce}[s.cs];if(f)f(C);}
+    if(s.cs!==o.cs||(s.cs==='leap'&&s.ct0!==o.ct0)){const f={tele:SFX.hiss,pounce:SFX.pounce,bitewind:SFX.growl,bite:SFX.jaw,leap:SFX.pounce,swipewind:SFX.growl,swipe:SFX.swipe,chargewind:SFX.hiss,charge:SFX.pounce,dizzy:SFX.crash}[s.cs];if(f)f(C);}
     if(o.cy>.05&&s.cy<=.001)SFX.land([Ct.x,.5,Ct.z,5]);
     if(s.hs!==o.hs){const q=[Hm.tx,s.hs==='warn'?4:1,Hm.tz,8];if(s.hs==='warn')SFX.warn(q);else if(s.hs==='fall')SFX.drop(q);else if(s.hs==='hold')SFX.stomp(q);}}
-  if((s.st==='play'||s.st==='cut')&&s.ph!==o.ph&&P.sp>.5&&P.dash<=0)SFX.step(H,Math.min(1,P.sp/4.6));
+  if((s.st==='play'||s.st==='cut')&&s.ph!==o.ph&&P.sp>.5&&P.dash<=0){if(P.wet&&s.st==='play')SFX.splash(H,Math.min(1,P.sp/4.6));else SFX.step(H,Math.min(1,P.sp/4.6));}
   /* the collar bell gives the cat away when it walks */
   if(cv&&s.st==='play'&&s.cph!==o.cph&&Ct.an.walk>.3){const q=[Ct.x,.4,Ct.z,5];SFX.paw(q);if(Math.random()<.55)SFX.bell([C[0],C[1]-.8,C[2],5],.05);}}
 

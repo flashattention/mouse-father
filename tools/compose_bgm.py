@@ -10,6 +10,7 @@ Tracks
   cat    — the cat is awake. Same theme, driven: ostinato, taiko, horns. Seamless loop.
   home   — arriving home. The theme turned to D major. Plays once.
   fall   — the father falls. A short sting.
+  rain   — chapter 2. The theme over a piano figure falling like drops. 60 bpm, 16 bars, seamless loop.
 
 Looped files are written as [pad | loop | pad] where both pads are copies of the loop's
 own wrap-around, so the player can loop between PAD and PAD+L without a click even if
@@ -501,12 +502,52 @@ def fall():
     return tr
 
 
+# ───────────────────────── rain (chapter 2) ─────────────────────────
+RAIN = [
+    ('D2', 'D3 A3 F4', 'A4 D5 F5 A5'), ('Bb1', 'D3 F3 Bb3', 'F4 Bb4 D5 F5'), ('A1', 'C3 F3 A3', 'F4 A4 C5 F5'), ('C2', 'E3 G3 C4', 'E4 G4 C5 E5'),
+    ('D2', 'D3 A3 F4', 'A4 D5 F5 A5'), ('Bb1', 'D3 F3 Bb3', 'F4 Bb4 D5 F5'), ('G1', 'D3 G3 Bb3', 'G4 Bb4 D5 G5'), ('A1', 'E3 A3 D4>E3 A3 C#4', 'E4 A4 D5 E5>E4 A4 C#5 E5'),
+    ('Bb1', 'D3 F3 Bb3', 'F4 Bb4 D5 F5'), ('C2', 'E3 G3 C4', 'E4 G4 C5 E5'), ('A1', 'E3 A3 C4', 'E4 A4 C5 E5'), ('D2', 'D3 A3 F4', 'A4 D5 F5 A5'),
+    ('G1', 'D3 G3 Bb3', 'G4 Bb4 D5 G5'), ('Bb1', 'D3 F3 Bb3', 'F4 Bb4 D5 F5'), ('A1', 'E3 A3 D4>E3 A3 C#4', 'E4 A4 D5 E5>E4 A4 C#5 E5'), ('A1', 'E3 A3 C#4', 'E4 A4 C#5 E5'),
+]
+
+
+def rain():
+    tr = Track(60, 16)
+    drop = np.random.default_rng(3)
+    for i, (bass, pad, arp) in enumerate(RAIN):
+        bar = i + 1
+        pv = .2 if bar <= 4 else .38 if 9 <= bar <= 12 else .28
+        tr.add('str', tr.sec(bar), strings(hz(bass), tr.b(4) + .3, pv * .85, att=1.4, voices=4, bright=.5))
+        hv = halves(pad)
+        for h, notes in enumerate(hv):
+            span = 4 / len(hv)
+            for j, nm in enumerate(notes):
+                tr.add('str', tr.sec(bar, h * span), strings(hz(nm), tr.b(span) + .3, pv * .6, att=1.1, pan=(j - 1) * .5, bright=.6))
+        pa = halves(arp)
+        tr.add('pno', tr.sec(bar), piano(hz(bass) * 2, tr.b(4) + .5, .34))
+        for e in range(8):   # drops: a sparse, uneven fall of high notes
+            if drop.random() < (.45 if bar <= 4 else .62):
+                pool = pa[0] if e < 4 or len(pa) == 1 else pa[1]
+                nm = pool[int(drop.integers(0, len(pool)))]
+                tr.add('pno', tr.sec(bar, e * .5 + drop.normal(0, .03)), piano(hz(nm), tr.b(2.5), .2 + .12 * drop.random()), jitter=0)
+        if 9 <= bar <= 12:
+            for j, nm in enumerate(hv[-1][1:]):
+                tr.add('cho', tr.sec(bar), choir(hz(nm) * 2, tr.b(4) + .3, .13, pan=(j - .5) * .8))
+    cello = dict(vel=.48, att=.16, rel=.8, voices=2, cents=4, vib=15, bright=.85, spread=.15, swell=.3)
+    melody(tr, 'solo', strings, [('D4', 2), ('C4', 1), ('A3', 1), ('Bb3', 3), ('A3', 1), ('G3', 2), ('A3', 1), ('Bb3', 1), ('A3', 4)], 5, **cello)
+    violin = dict(vel=.4, att=.18, rel=1.0, voices=3, cents=5, vib=14, bright=.75, spread=.25, swell=.3)
+    melody(tr, 'solo', strings, [('F5', 2), ('E5', 1), ('D5', 1), ('E5', 3), ('G5', 1), ('E5', 2), ('C5', 1), ('A4', 1), ('D5', 4)], 9, **violin)
+    melody(tr, 'solo', strings, [('D4', 2), ('Bb3', 1), ('G3', 1), ('F3', 2), ('D4', 2), ('E4', 2), ('D4', 1), ('C#4', 1), ('A3', 3)], 13, **{**cello, 'vel': .42})
+    tr.add('low', tr.sec(1), boom(.18))
+    return tr
+
+
 if __name__ == '__main__':
     import sys
-    which = sys.argv[1:] or ['night', 'cat', 'home', 'fall']
+    which = sys.argv[1:] or ['night', 'cat', 'home', 'fall', 'rain']
     for name in which:
         tr = globals()[name]()
-        y = tr.mix(loop=name in ('night', 'cat'))
-        if name in ('night', 'cat'):
+        y = tr.mix(loop=name in ('night', 'cat', 'rain'))
+        if name in ('night', 'cat', 'rain'):
             print(f'  loop {PAD} → {PAD + tr.L:.4f}')
         write(name, y)

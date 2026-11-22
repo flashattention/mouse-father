@@ -62,7 +62,7 @@ function buildHome(){const s=W.home=new T.Scene(),h=HM;s.background=new T.Color(
   W.flame.add(at(new T.Mesh(new T.SphereGeometry(1,10,8),new T.MeshBasicMaterial({color:0xfff4d0,blending:T.AdditiveBlending,depthWrite:false,fog:false})),0,-.25,0,.55,.5,.55));
   W.halo=new T.Sprite(new T.SpriteMaterial({map:glowTex(),blending:T.AdditiveBlending,depthWrite:false,transparent:true,opacity:.55,fog:false}));W.halo.position.set(0,.56,0);W.halo.scale.set(1.3,1.3,1);cd.add(W.halo);
   const cl=W.candle=new T.PointLight(0xff9a48,2.6,14,2);cl.position.set(h.candle[0],h.top+.62,h.candle[1]);cl.castShadow=true;cl.shadow.mapSize.set(512,512);cl.shadow.bias=-.004;cl.shadow.camera.near=.1;s.add(cl);
-  const dl=new T.PointLight(0x7090ff,.9,7,2);dl.position.set(-3.2,1.2,h.Z1-.5);s.add(dl);
+  const dl=W.doorL=new T.PointLight(0x7090ff,.9,7,2);dl.position.set(-3.2,1.2,h.Z1-.5);s.add(dl);
   const capG=new T.CylinderGeometry(.42,.42,.28,48,2),cpp=capG.attributes.position;for(let i=0;i<cpp.count;i++){const y=cpp.getY(i),a=Math.atan2(cpp.getZ(i),cpp.getX(i)),k=y<0?1.06+.04*Math.cos(a*21):1;cpp.setX(i,cpp.getX(i)*k);cpp.setZ(i,cpp.getZ(i)*k);}capG.computeVertexNormals();
   const capM=sm(0x8a2a20,{metalness:.6,roughness:.45,envMapIntensity:1.2});[[-2.05,-12.55],[-3.75,-13.15],[-6,-11.5]].forEach(q=>s.add(at(M(capG,capM),q[0],.14,q[1])));
   /* the bed: a matchbox drawer with a cotton-ball pillow and a knitted blanket; the sleeve stands as headboard */
@@ -79,6 +79,11 @@ function buildHome(){const s=W.home=new T.Scene(),h=HM;s.background=new T.Color(
   /* tonight's food appears on the table on the way home */
   const fd=W.homeFood=new T.Group(),ch=sm(0xf2c24e,{roughness:.55,emissive:0x2a1800});fd.visible=false;s.add(fd);
   [[0,.22,0,0],[.28,.06,.18,1.2],[-.3,.06,.12,2.5],[.12,.06,-.32,4],[-.2,.08,-.28,5.2]].forEach(q=>{const m=M(new T.CylinderGeometry(.15,.15,.12,1,1,false,0,1.1),ch);m.position.set(h.bowl[0]+q[0],h.top+q[1],h.bowl[1]+q[2]);m.rotation.y=q[3];fd.add(m);});
+  /* chapter 2: the roof leaks into a bottle cap on the floor */
+  const hd=W.homeDrip=new T.Group();hd.visible=false;s.add(hd);hd.add(at(M(capG,sm(0x2a5a7a,{metalness:.6,roughness:.4,envMapIntensity:1.2})),-5.8,.14,-9.2));
+  const hw=new T.Mesh(new T.CircleGeometry(.38,24),sm(0x0b1018,{roughness:.05,metalness:.5,envMapIntensity:1.5}));hw.rotation.x=-Math.PI/2;hw.position.set(-5.8,.29,-9.2);hd.add(hw);
+  const hp2=new T.Mesh(new T.CircleGeometry(.9,24),sm(0x0b1018,{roughness:.05,metalness:.5,transparent:true,opacity:.7,polygonOffset:true,polygonOffsetFactor:-2}));hp2.rotation.x=-Math.PI/2;hp2.position.set(-5.6,.013,-9.0);hd.add(hp2);
+  W.hDrop=new T.Mesh(new T.SphereGeometry(.035,8,6),new T.MeshBasicMaterial({color:0xbcd0f0,fog:false}));W.hDrop.scale.y=2.4;hd.add(W.hDrop);
   const n=140,p=new Float32Array(n*3),r=rnd(9);for(let i=0;i<n;i++){p[i*3]=h.X0+r()*w;p[i*3+1]=r()*h.H;p[i*3+2]=h.Z0+r()*d;}
   const dg=new T.BufferGeometry();dg.setAttribute('position',new T.BufferAttribute(p,3));W.hdust=new T.Points(dg,new T.PointsMaterial({color:0xffc890,size:.03,transparent:true,opacity:.5,blending:T.AdditiveBlending,depthWrite:false}));s.add(W.hdust);
   /* the family */
@@ -104,7 +109,7 @@ function animKin(dt){if(!W.kin)return;const t=G.t;
     const dx=k.x-k.px,dz=k.z-k.pz,v=dt>0?hyp(dx,dz)/dt:0;k.px=k.x;k.pz=k.z;
     k.mv+=((v>.3?1:0)-k.mv)*Math.min(1,dt*8);if(v>.3){k.ph+=dt*(4.5+i*.4);k.yaw+=angd(Math.atan2(dx,dz),k.yaw)*Math.min(1,dt*10);}
     const hop=Math.abs(Math.sin(k.ph*Math.PI))*.16*s*k.mv,lie=k.lie;
-    R.g.position.set(k.x,k.y+hop+lie*.4*s,k.z);R.g.rotation.set(-1.5708*lie,k.yaw,k.roll*lie);
+    R.g.position.set(k.x+(k.shiver?Math.sin(t*41+i*2)*.014*s:0),k.y+hop+lie*.4*s,k.z);R.g.rotation.set(-1.5708*lie,k.yaw,k.roll*lie);
     const br=Math.sin(t*(lie>.5?1.5:2.3)+i*1.3),cg=t-k.cough,ck=cg>0&&cg<.7?Math.sin(Math.min(1,cg/.35)*Math.PI)*(cg<.35?1:.6):0;
     const p0=B.hips.userData.p0,hy=-.17*k.sit;B.hips.position.set(p0.x,p0.y+hy,p0.z);
     const crx=.15*k.mv+.4*ck+k.lean+.12*k.sit+(k.nod||0)*Math.max(0,Math.sin(t*3.2+i*1.9));B.chest.rotation.set(crx,0,0);B.chest.scale.set(1+.025*br,1+.03*br,1+.025*br);B.neck.rotation.x=-.45*crx+.25*ck;
@@ -120,4 +125,6 @@ function animKin(dt){if(!W.kin)return;const t=G.t;
 /* candle flicker, dust drift; the shadow-casting candle only when the home is on screen */
 function homeStep(dt){if(!W.home)return;const t=G.t,f=.86+.08*Math.sin(t*13.1)+.05*Math.sin(t*29.7+1)+.04*Math.sin(t*7.3+2);
   W.candle.intensity=2.2*f*(W.homeFood.visible?1.15:1);W.flame.scale.set(.045,.11*(.9+.15*f),.045);W.flame.rotation.z=Math.sin(t*3.1)*.08;W.halo.material.opacity=.45*f;
+  if(W.homeDrip.visible){const c=(t%1.3)/1.3,pc=W.hdc===undefined?c:W.hdc;W.hdc=c;W.hDrop.visible=c<.6;W.hDrop.position.set(-5.8,.3+(HM.H-.3)*(1-Math.pow(Math.min(1,c/.6),2)),-9.2);
+    if(pc<.6&&c>=.6&&W.cur===W.home)sfx('plip',[-5.8,.3,-9.2,3]);}
   W.hdust.rotation.y=Math.sin(t*.04)*.03;W.hdust.position.y=Math.sin(t*.25)*.15;}

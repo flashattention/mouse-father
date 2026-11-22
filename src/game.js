@@ -104,12 +104,12 @@ function buildHuman(){const g=new T.Group();g.add(at(M(new T.SphereGeometry(1,28
   g.add(at(M(new T.CylinderGeometry(.72,.8,24,24),sm(0x1b2030)),0,12.6,-1.1));g.add(at(M(new T.CylinderGeometry(.9,.9,.5,24),sm(0x1b2030)),0,1.25,-1.1));return g;}
 
 /* ═════════ world ═════════ */
-const HOME={x:-3.2,z:-6.2},BX=15,BZ0=-6.1,BZ1=25,QUOTA=5,HS=1.5;
+const HOME={x:-3.2,z:-6.2},BX=15,BZ0=-6.1,BZ1=25,HS=1.5;
 const LEGS=[[-5,7,.75],[7,7,.75],[-5,17,.75],[7,17,.75],[11,2,.4],[13.5,2,.4],[11,4.5,.4],[13.5,4.5,.4]];
 const W={};
 function buildWorld(){
   const scene=W.scene=new T.Scene();scene.background=new T.Color(0x05070c);scene.fog=new T.Fog(0x070a12,9,40);
-  scene.add(new T.HemisphereLight(0x3a4c70,0x14100c,.7));
+  scene.add(W.hemi=new T.HemisphereLight(0x3a4c70,0x14100c,.7));
   const key=W.key=new T.DirectionalLight(0x8fb2ff,1.1);key.castShadow=true;const sc=key.shadow.camera;sc.left=-13;sc.right=13;sc.top=13;sc.bottom=-13;sc.near=1;sc.far=50;
   key.shadow.mapSize.set(1024,1024);key.shadow.bias=-.0004;key.shadow.normalBias=.04;scene.add(key);scene.add(key.target);
   const rim=new T.DirectionalLight(0x9fc0ff,.6);rim.position.set(-6,7,-6);scene.add(rim);
@@ -128,15 +128,30 @@ function buildWorld(){
   const wood=sm(0x5a4632);LEGS.forEach(l=>scene.add(at(M(new T.BoxGeometry(l[2]*1.25,24,l[2]*1.25),wood),l[0],12,l[1])));
   scene.add(at(M(new T.BoxGeometry(15,.6,13),wood),1,19,12));scene.add(at(M(new T.BoxGeometry(4,.4,4),wood),12.25,11,3.25));
   /* food crumbs */
-  W.crumbs=[[3.5,-1.5],[-10,6],[1,12]].map((p,i)=>{const g=new T.Group(),r=rnd(20+i);for(let k=0;k<4;k++){const c=M(new T.DodecahedronGeometry(.16+r()*.1,0),sm(0xc79a52,{roughness:.9,emissive:0x2a1a04}));c.position.set((r()-.5)*.35,.14+r()*.1,(r()-.5)*.35);c.rotation.set(r()*3,r()*3,r()*3);g.add(c);}
+  W.crumbs=[0,0,0,0].map((p,i)=>{p=[0,0];const g=new T.Group(),r=rnd(20+i);for(let k=0;k<4;k++){const c=M(new T.DodecahedronGeometry(.16+r()*.1,0),sm(0xc79a52,{roughness:.9,emissive:0x2a1a04}));c.position.set((r()-.5)*.35,.14+r()*.1,(r()-.5)*.35);c.rotation.set(r()*3,r()*3,r()*3);g.add(c);}
     const gl=new T.Mesh(new T.CircleGeometry(.9,24),new T.MeshBasicMaterial({color:0xffb040,transparent:true,opacity:.22,blending:T.AdditiveBlending,depthWrite:false,fog:false}));gl.rotation.x=-Math.PI/2;gl.position.y=.03;g.add(gl);
     g.position.set(p[0],0,p[1]);scene.add(g);return{g,x:p[0],z:p[1],got:false};});
-  W.traps=[[-1,3.2,.4],[10,9.5,-1],[-8,14,2],[4,20.5,.3]].map(p=>{const t=buildTrap();t.g.position.set(p[0],0,p[1]);t.g.rotation.y=p[2];t.g.scale.setScalar(1.3);scene.add(t.g);
+  W.traps=[0,0,0,0].map(()=>{const p=[0,0,0];const t=buildTrap();t.g.position.set(p[0],0,p[1]);t.g.rotation.y=p[2];t.g.scale.setScalar(1.3);scene.add(t.g);
     t.x=p[0];t.z=p[1];t.bx=p[0]+Math.cos(p[2])*.42*1.3;t.bz=p[1]-Math.sin(p[2])*.42*1.3;t.state=0;t.t0=0;t.got=false;return t;});
   W.human=buildHuman();W.human.position.set(0,30,0);scene.add(W.human);
   const ringM=c=>new T.MeshBasicMaterial({color:c,transparent:true,opacity:0,depthWrite:false,fog:false,side:T.DoubleSide});
   W.hShadow=new T.Mesh(new T.CircleGeometry(2.7,32),ringM(0x000000));W.hRing=new T.Mesh(new T.RingGeometry(2.5,2.7,40),ringM(0xff5a3a));
   W.cRing=new T.Mesh(new T.RingGeometry(1.9,2.1,40),ringM(0x9ad94a));
+  W.cLine=new T.Mesh(new T.PlaneGeometry(1.6,15),ringM(0xff6a3a));W.cLine.rotation.x=-Math.PI/2;W.cLine.rotation.order='YXZ';scene.add(W.cLine);
+  /* chapter 2 props: glue boards, puddles under ceiling leaks */
+  const glueM=new T.MeshPhysicalMaterial({color:0x9a7628,roughness:.3,clearcoat:1,clearcoatRoughness:.1,envMap:env(),envMapIntensity:.6}),glueB=sm(0x8a7c62,{roughness:.95});
+  W.glue=[0,0,0,0].map(()=>{const g2=new T.Group();g2.add(at(M(new T.BoxGeometry(1.9,.03,1.25),glueB),0,.015,0));g2.add(at(M(new T.BoxGeometry(1.7,.02,1.05),glueM,false),0,.04,0));
+    const r=rnd(77);for(let k=0;k<5;k++)g2.add(at(M(new T.SphereGeometry(.03,6,5),sm(0x15110c),false),(r()-.5)*1.4,.05,(r()-.5)*.8));
+    g2.scale.setScalar(1.25);scene.add(g2);return{g:g2,x:0,z:0,on:false};});
+  const pudM=sm(0x05070b,{roughness:.06,metalness:.25,envMapIntensity:.5,transparent:true,opacity:.8,polygonOffset:true,polygonOffsetFactor:-2});
+  const ripM=new T.MeshBasicMaterial({color:0x9fb8e0,transparent:true,opacity:0,blending:T.AdditiveBlending,depthWrite:false});
+  W.puddles=[0,0,0,0,0].map((p,i)=>{const r=rnd(40+i),sh=new T.Shape();for(let k=0;k<=24;k++){const a=k/24*6.283,rr=1+.18*Math.sin(a*3+r()*6)+.08*Math.sin(a*5+i);k?sh.lineTo(Math.cos(a)*rr,Math.sin(a)*rr):sh.moveTo(rr,0);}
+    const m=new T.Mesh(new T.ShapeGeometry(sh),pudM);m.rotation.x=-Math.PI/2;m.receiveShadow=true;m.position.y=.012;scene.add(m);
+    const rip=new T.Mesh(new T.RingGeometry(.8,.9,32),ripM.clone());rip.rotation.x=-Math.PI/2;rip.position.y=.02;scene.add(rip);
+    const drop=new T.Mesh(new T.SphereGeometry(.05,8,6),new T.MeshBasicMaterial({color:0xbcd0f0,transparent:true,opacity:.8,fog:false}));drop.scale.y=2.4;scene.add(drop);
+    return{m,rip,drop,x:0,z:0,r:1,on:false,off:i*.37};});
+  W.stars=new T.Group();for(let k=0;k<3;k++)W.stars.add(at(new T.Mesh(new T.OctahedronGeometry(.14,0),new T.MeshBasicMaterial({color:0xffe080,blending:T.AdditiveBlending,depthWrite:false,fog:false})),Math.cos(k*2.09)*.9,0,Math.sin(k*2.09)*.9));
+  W.stars.visible=false;scene.add(W.stars);
   [W.hShadow,W.hRing,W.cRing].forEach((m,i)=>{m.rotation.x=-Math.PI/2;m.position.y=.03+i*.005;scene.add(m);});
   W.spark=new T.Mesh(new T.SphereGeometry(.5,12,10),new T.MeshBasicMaterial({color:0xfff0c0,transparent:true,opacity:0,blending:T.AdditiveBlending,depthWrite:false,fog:false}));scene.add(W.spark);
   W.cat=buildCat();W.cat.g.scale.setScalar(3.2);scene.add(W.cat.g);
@@ -148,39 +163,49 @@ function buildWorld(){
 }
 
 /* ═════════ game state ═════════ */
-const G={state:'intro',t:0,hp:5,food:0,inv:0,shake:0,msgT:0,catGone:false},P={},Ct={},Hm={},In={x:0,y:0,atk:false,shd:false,dash:false},keys={};
+const G={state:'intro',t:0,hp:5,food:0,inv:0,shake:0,msgT:0,catGone:false,ch:1,quota:5,hpMax:5,flashT:-9,nextFlash:8},P={},Ct={},Hm={},In={x:0,y:0,atk:false,shd:false,dash:false},keys={};
 const cam={yaw:0,pitch:.28,manual:-9};
 const angd=(a,b)=>{let d=a-b;while(d>Math.PI)d-=6.2832;while(d<-Math.PI)d+=6.2832;return d;};
 const hyp=Math.hypot;
 function toast(s,d){const e=$('toast');e.textContent=s;e.style.opacity=1;G.msgT=G.t+(d||2.4);}
-function hud(){const p=$('pips');let h='';for(let i=0;i<5;i++)h+='<i'+(i<G.hp?'':' class="off"')+'></i>';p.innerHTML=h;$('foodn').textContent=G.food;
-  $('goal').textContent=G.food<QUOTA?'먹이를 찾아라. 덫의 치즈는 칼로 덫을 먼저 터뜨리고 줍는다.':!G.catGone?'고양이를 물리쳐라. 덮친 직후가 빈틈이다.':'집으로 돌아가라.';
-  $('boss').style.display=Ct.awake&&!G.catGone?'flex':'none';$('bossbar').firstElementChild.style.width=Math.max(0,Ct.hp/6*100)+'%';}
+function hud(){const p=$('pips');let h='';for(let i=0;i<G.hpMax;i++)h+='<i'+(i<G.hp?'':' class="off"')+'></i>';p.innerHTML=h;$('foodn').textContent=G.food;$('foodq').textContent=G.quota;
+  $('goal').textContent=P.glue?'끈끈이에 붙었다. 칼을 연타해 떼어내라!':G.food<G.quota?(G.ch===2?'먹이를 찾아라. 물웅덩이는 미끄럽고, 노란 판은 끈끈이다.':'먹이를 찾아라. 덫의 치즈는 칼로 덫을 먼저 터뜨리고 줍는다.'):!G.catGone?(G.ch===2&&Ct.hp<=Ct.hpMax/2?'돌진을 굴러서 피해 탁자 다리에 부딪히게 하라.':'고양이를 물리쳐라. 덮친 직후가 빈틈이다.'):'집으로 돌아가라.';
+  $('boss').style.display=Ct.awake&&!G.catGone?'flex':'none';$('bossbar').firstElementChild.style.width=Math.max(0,Ct.hp/Ct.hpMax*100)+'%';}
 function reset(){
-  Object.assign(G,{hp:5,food:0,inv:0,shake:0,catGone:false});
-  Object.assign(P,{x:-3.2,z:-3.6,yaw:0,kx:0,kz:0,atk:-9,hit:false,dash:0,dashCd:0,dx:0,dz:1,run:0,ph:0,sp:0,combo:0,hurtT:-9,pickT:-9,blkT:-9,deadT:-9,age:0,pose:null});
-  Object.assign(Ct,{x:11,z:21,y:0,yaw:-2.5,state:'doze',t0:0,hp:6,awake:false,wait:1,bit:false,leaps:0,mv:0,turnV:0,sleep:1,tCrouch:0,tWind:0,tBite:0,tFl:0,airK:-1,glow:.1,
+  const ch=CH[G.ch];Object.assign(G,{hp:ch.hp,hpMax:ch.hp,quota:ch.quota,food:0,inv:0,shake:0,catGone:false,nextFlash:G.t+6});
+  Object.assign(P,{x:-3.2,z:-3.6,yaw:0,kx:0,kz:0,atk:-9,hit:false,dash:0,dashCd:0,dx:0,dz:1,run:0,ph:0,sp:0,combo:0,hurtT:-9,pickT:-9,blkT:-9,deadT:-9,age:0,pose:null,glue:null,stuck:0,wet:0,slx:0,slz:0});
+  Object.assign(Ct,{x:ch.cat[0],z:ch.cat[1],y:0,yaw:ch.cat[2],state:'doze',t0:0,hp:ch.catHp,hpMax:ch.catHp,tSw:0,sweep:0,awake:false,wait:1,bit:false,leaps:0,mv:0,turnV:0,sleep:1,tCrouch:0,tWind:0,tBite:0,tFl:0,airK:-1,glow:.1,
     an:{stand:0,crouch:0,wind:0,fl:0,walk:0,ph:0,puff:1}});
   Object.assign(Hm,{state:'wait',t0:G.t,next:4,tx:0,tz:8,yaw:0});
   cam.yaw=0;cam.pitch=.28;
-  W.crumbs.forEach(c=>{c.got=false;c.g.visible=true;});W.traps.forEach(t=>{t.state=0;t.got=false;t.bait.visible=true;t.pv.rotation.z=0;});
+  layout(ch);
   W.cat.g.visible=true;W.human.position.y=30;[W.hShadow,W.hRing,W.cRing].forEach(m=>m.material.opacity=0);hud();}
-function hurt(n,sx,sz,blockable){
+/* place this night's food, traps, glue and puddles; unused props are parked as already spent */
+function layout(ch){
+  W.crumbs.forEach((c,i)=>{const p=ch.crumbs[i];c.got=!p;c.g.visible=!!p;if(p){c.x=p[0];c.z=p[1];c.g.position.set(p[0],0,p[1]);}});
+  W.traps.forEach((t,i)=>{const p=ch.traps[i];t.g.visible=!!p;t.pv.rotation.z=0;t.bait.visible=!!p;t.state=p?0:2;t.got=!p;
+    if(p){t.g.position.set(p[0],0,p[1]);t.g.rotation.y=p[2];t.g.scale.setScalar(1.3);t.x=p[0];t.z=p[1];t.bx=p[0]+Math.cos(p[2])*.42*1.3;t.bz=p[1]-Math.sin(p[2])*.42*1.3;}});
+  W.glue.forEach((q,i)=>{const p=ch.glue[i];q.on=!!p;q.g.visible=!!p;if(p){q.x=p[0];q.z=p[1];q.ry=p[2];q.g.position.set(p[0],0,p[1]);q.g.rotation.y=p[2];}});
+  W.puddles.forEach((q,i)=>{const p=ch.puddles[i];q.on=!!p;q.m.visible=q.rip.visible=q.drop.visible=!!p;if(p){q.x=p[0];q.z=p[1];q.r=p[2];q.m.position.set(p[0],.012,p[1]);q.m.scale.setScalar(p[2]);q.rip.position.set(p[0],.02,p[1]);}});
+  const e=ch.env;W.scene.fog.color.setHex(e.fog);W.scene.fog.near=e.near;W.scene.fog.far=e.far;W.key.color.setHex(e.key);W.key.intensity=e.ki;W.hemi.intensity=e.hemi;W.shafts.forEach(m=>m.userData.base=e.shaft);
+  $('foodq').textContent=ch.quota;}
+function hurt(n,sx,sz,blockable,kb){
   if(G.state!=='play'||G.inv>0||P.dash>0)return false;
   const dx=P.x-sx,dz=P.z-sz,l=hyp(dx,dz)||1;
-  if(blockable&&In.shd&&Math.abs(angd(Math.atan2(-dx,-dz),P.yaw))<1.25){P.kx=dx/l*7;P.kz=dz/l*7;G.shake=.25;spark(P.x-dx/l*.6,1,P.z-dz/l*.6);toast('막았다!',1);G.inv=.35;P.blkT=G.t;return false;}
+  if(blockable&&In.shd&&Math.abs(angd(Math.atan2(-dx,-dz),P.yaw))<1.25){P.kx=dx/l*(kb||7);P.kz=dz/l*(kb||7);G.shake=kb?.45:.25;spark(P.x-dx/l*.6,1,P.z-dz/l*.6);toast('막았다!',1);G.inv=.35;P.blkT=G.t;return false;}
   G.hp-=n;P.hurtT=G.t;G.inv=1.3;G.shake=.5;P.kx=dx/l*9;P.kz=dz/l*9;$('hurt').style.opacity=1;setTimeout(()=>$('hurt').style.opacity=0,200);hud();
   if(G.hp<=0)finish(false);return true;}
 function spark(x,y,z){W.spark.position.set(x,y,z);W.spark.userData.t=G.t;}
-function getFood(){G.food++;P.pickT=G.t;hud();if(G.food===QUOTA){toast('다섯 조각. 이제 집으로.',2.6);if(!Ct.awake)setTimeout(()=>{if(G.state==='play')wakeCat(true);},1800);}else toast('먹이 '+G.food+' / '+QUOTA,1.2);}
+function getFood(){G.food++;P.pickT=G.t;hud();if(G.food===G.quota){toast(KNUM[G.quota]+' 조각. 이제 집으로.',2.6);if(!Ct.awake)setTimeout(()=>{if(G.state==='play')wakeCat(true);},1800);}else toast('먹이 '+G.food+' / '+G.quota,1.2);}
 function wakeCat(block){if(Ct.awake||G.catGone)return;Ct.awake=true;toast('고양이가 눈을 떴다.',2.4);hud();
   if(block){const dx=HOME.x-P.x,dz=HOME.z+2-P.z,l=hyp(dx,dz)||1,d=Math.min(l*.6,7);leapTo(P.x+dx/l*d,P.z+dz/l*d,1.1,'hunt');}else{Ct.state='hunt';Ct.t0=G.t;Ct.wait=.8;}}
 function leapTo(x,z,dur,next){Ct.sx=Ct.x;Ct.sz=Ct.z;Ct.ex=Math.max(-BX+2,Math.min(BX-2,x));Ct.ez=Math.max(BZ0+2.5,Math.min(BZ1-2,z));Ct.dur=dur;Ct.next=next;Ct.state='leap';Ct.t0=G.t;Ct.yaw=Math.atan2(Ct.ex-Ct.sx,Ct.ez-Ct.sz);}
 function finish(win){G.state=win?'win':'dead';if(!win)P.deadT=G.t;$('toast').style.opacity=0;G.msgT=0;$('hud').style.display='none';$('pad').style.display='none';$('joy').style.display='none';
-  $('endeye').textContent=win?'제1장 끝':'쓰러지다';$('endh').textContent=win?'오늘 저녁은 치즈 다섯 조각':'아직 끝낼 수 없다';
-  $('endp').textContent=win?'내일 밤에도 그는 다시 문턱을 넘을 것이다. 제2장 ‘비 오는 밤’은 다음 업데이트에서 이어집니다.':'문간의 불빛이 아직 꺼지지 않았다. 식구들이 기다린다. 다시 일어서야 한다.';
-  $('again').textContent=win?'다시 나서기':'다시 일어서기';if(win)startReturn();else setTimeout(()=>$('end').classList.add('show'),700);}
-function begin(){reset();heroTo(W.scene);W.homeFood.visible=false;G.state='play';$('intro').classList.remove('show');$('end').classList.remove('show');$('hud').style.display='flex';if(touch)$('pad').style.display='grid';toast('먹이 다섯 개를 구해 돌아오자.',2.6);}
+  const ch=CH[G.ch],nx=CH[G.ch+1];P.glue=null;
+  $('endeye').textContent=win?ch.end[0]:CHN[G.ch]+' · 쓰러지다';$('endh').textContent=win?ch.end[1]:'아직 끝낼 수 없다';
+  $('endp').textContent=win?ch.end[2]+(nx&&nx.play?'':' 다음 장은 준비 중입니다.'):'문간의 불빛이 아직 꺼지지 않았다. 식구들이 기다린다. 다시 일어서야 한다.';
+  $('again').textContent=win?'이 밤 다시 하기':'다시 일어서기';if(win)startReturn();else{endButtons(false);setTimeout(()=>$('end').classList.add('show'),700);}}
+function begin(){reset();heroTo(W.scene);W.homeFood.visible=false;G.state='play';$('intro').classList.remove('show');$('end').classList.remove('show');$('hud').style.display='flex';if(touch)$('pad').style.display='grid';toast('먹이 '+KNUM[G.quota]+' 개를 구해 돌아오자.',2.6);}
 
 /* ═════════ update ═════════ */
 function collide(){
@@ -194,9 +219,16 @@ function updatePlayer(dt){
   let l=hyp(ix,iy);if(l>1){ix/=l;iy/=l;l=1;}
   const fx=Math.sin(cam.yaw),fz=Math.cos(cam.yaw),mx=fx*iy-fz*ix,mz=fz*iy+fx*ix;
   if(l>.12){P.dx=mx/l;P.dz=mz/l;P.yaw+=angd(Math.atan2(mx,mz),P.yaw)*Math.min(1,dt*12);}
+  if(P.glue){/* stuck: mash the sword (or wiggle the stick) to tear free */
+    const dir=l>.5?Math.round(Math.atan2(ix,iy)/1.5708):null;let m=In.atk||In.dash?.2:0;if(dir!==null&&dir!==P.gdir){m=Math.max(m,.1);P.gdir=dir;}In.atk=In.dash=false;
+    P.stuck=Math.max(0,P.stuck+m-dt*.08);if(m)P.mashT=G.t;P.sp=P.vx=P.vz=0;P.kx=P.kz=0;
+    if(P.stuck>=1){const q=P.glue;q.on=false;q.g.visible=false;spark(q.x,.4,q.z);P.glue=null;P.stuck=0;P.freeT=G.t;G.inv=Math.max(G.inv,.7);toast('떼어냈다!',1);hud();}
+    return;}
   const shd=In.shd&&P.dash<=0;let sp=l>.12?4.6*l*(shd?.45:1):0;
   if(In.dash&&P.dashCd<=0&&P.dash<=0){P.dash=.24;P.dashCd=.9;G.inv=Math.max(G.inv,.32);if(l<=.12){P.dx=Math.sin(P.yaw);P.dz=Math.cos(P.yaw);}}In.dash=false;
   let vx=P.dx*sp,vz=P.dz*sp;if(P.dash>0){vx=P.dx*11.5;vz=P.dz*11.5;P.dash-=dt;}P.dashCd-=dt;
+  P.wet=W.puddles.some(q=>q.on&&hyp(P.x-q.x,P.z-q.z)<q.r*.92)?1:0;   /* wet floor: speed changes slowly, so you slide */
+  if(P.wet){const k=Math.min(1,dt*(P.dash>0?.8:1.7));P.slx+=(vx-P.slx)*k;P.slz+=(vz-P.slz)*k;vx=P.slx;vz=P.slz;}else{P.slx=vx;P.slz=vz;}
   P.x+=(vx+P.kx)*dt;P.z+=(vz+P.kz)*dt;const kd=Math.exp(-dt*7);P.kx*=kd;P.kz*=kd;P.vx=vx;P.vz=vz;P.sp=hyp(vx,vz);
   collide();
   if(In.atk&&G.t-P.atk>.5){P.combo=G.t-P.atk<.95?(P.combo+1)%3:0;P.atk=G.t;P.hit=false;}In.atk=false;
@@ -207,12 +239,14 @@ function updatePlayer(dt){
       if(inArc(cfx,cfz,2.9)||inArc(Ct.x,Ct.z,3.4)){P.hit=true;const sneak=!Ct.awake;Ct.hp-=sneak?2:1;spark((P.x+cfx)/2,1.3,(P.z+cfz)/2);G.shake=.3;
         if(sneak){Ct.awake=true;toast('기습!',1.2);}
         const dx=Ct.x-P.x,dz=Ct.z-P.z,d=hyp(dx,dz)||1;Ct.x+=dx/d*.7;Ct.z+=dz/d*.7;
-        if(Ct.hp<=0){G.catGone=true;Ct.leaps=2;toast('고양이가 물러난다. 집으로!',3);leapTo(Ct.x+dx/d*9,Ct.z+dz/d*9,.7,'flee');}else{Ct.state='hurt';Ct.t0=G.t;}hud();}}}
+        if(Ct.hp<=0){G.catGone=true;Ct.leaps=2;toast('고양이가 물러난다. 집으로!',3);leapTo(Ct.x+dx/d*9,Ct.z+dz/d*9,.7,'flee');}else if(Ct.state!=='dizzy'){Ct.state='hurt';Ct.t0=G.t;}hud();}}}
   W.crumbs.forEach(c=>{if(!c.got&&hyp(P.x-c.x,P.z-c.z)<1.1){c.got=true;c.g.visible=false;getFood();}});
+  W.glue.forEach(q=>{if(!q.on||P.glue||P.dash>0||G.t-(P.freeT||-9)<1)return;const dx=P.x-q.x,dz=P.z-q.z,c=Math.cos(q.ry),s=Math.sin(q.ry),lx=dx*c-dz*s,lz=dx*s+dz*c;
+    if(Math.abs(lx)<1.05&&Math.abs(lz)<.68){P.glue=q;P.stuck=0;P.gdir=null;P.glueT=G.t;toast('끈끈이에 붙었다! 칼을 연타해!',1.6);hud();}});
   W.traps.forEach(t=>{
     if(t.state===0&&hyp(P.x-t.x,P.z-t.z)<1.0&&P.dash<=0){t.state=1;t.t0=G.t;if(hurt(1,t.x,t.z,false))toast('덫에 걸렸다!',1.4);}
     if(t.state===2&&!t.got&&hyp(P.x-t.bx,P.z-t.bz)<1.25){t.got=true;t.bait.visible=false;getFood();}});
-  if(G.food>=QUOTA&&hyp(P.x-HOME.x,P.z-HOME.z)<1.7){if(G.catGone)finish(true);else if(G.t>G.msgT)toast('고양이를 달고 집에 들어갈 수는 없다.',2);}
+  if(G.food>=G.quota&&hyp(P.x-HOME.x,P.z-HOME.z)<1.7){if(G.catGone)finish(true);else if(G.t>G.msgT)toast('고양이를 달고 집에 들어갈 수는 없다.',2);}
   if(!Ct.awake&&hyp(P.x-Ct.x,P.z-Ct.z)<5.2&&P.sp>3)wakeCat(false);}
 function updateTraps(){W.traps.forEach(t=>{if(t.state===1){const k=Math.min(1,(G.t-t.t0)/.1);t.pv.rotation.z=-2.85*k;if(k>=1)t.state=2;}});}
 function updateHuman(dt){const H=Hm,e=G.t-H.t0,hm=W.human,fx=Math.sin(H.yaw),fz=Math.cos(H.yaw);
@@ -226,11 +260,12 @@ function updateHuman(dt){const H=Hm,e=G.t-H.t0,hm=W.human,fx=Math.sin(H.yaw),fz=
   hm.rotation.y=H.yaw;W.hShadow.position.set(H.tx,.03,H.tz);W.hRing.position.set(H.tx,.035,H.tz);}
 function updateCat(dt){
   if(!W.cat.g.visible)return;const e=G.t-Ct.t0,dx=P.x-Ct.x,dz=P.z-Ct.z,dist=hyp(dx,dz),want=Math.atan2(dx,dz),y0=Ct.yaw,turn=r=>{Ct.yaw+=Math.max(-r*dt,Math.min(r*dt,angd(want,Ct.yaw)));};
-  let mv=0;Ct.glow=.85;Ct.sleep=0;Ct.tCrouch=0;Ct.tWind=0;Ct.tBite=0;Ct.tFl=0;Ct.airK=-1;
+  let mv=0;Ct.glow=.85;Ct.sleep=0;Ct.tCrouch=0;Ct.tWind=0;Ct.tBite=0;Ct.tFl=0;Ct.airK=-1;Ct.tSw=0;Ct.sweep=0;W.cLine.material.opacity=0;
   switch(Ct.state){
     case 'doze':Ct.glow=.1;Ct.sleep=1;break;
     case 'hunt':turn(2.6);{const f=Math.max(0,Math.cos(angd(want,Ct.yaw)));mv=dist>5.2?2.4*f:dist<3.4?-.9:0;}   /* stalk to pouncing range */
-      if(e>Ct.wait){const front=Math.abs(angd(want,Ct.yaw))<.7;if(dist<4.3&&front){Ct.state='bitewind';Ct.t0=G.t;}else{Ct.tx=P.x+P.vx*.3;Ct.tz=P.z+P.vz*.3;Ct.state='tele';Ct.t0=G.t;}}break;
+      if(e>Ct.wait){const front=Math.abs(angd(want,Ct.yaw))<.7,ch=CH[G.ch];if(dist<4.3&&front){Ct.state=ch.swipe&&Math.random()<.5?'swipewind':'bitewind';Ct.t0=G.t;}
+        else if(ch.charge&&Ct.hp<=Ct.hpMax/2&&dist>4.5&&Math.random()<.65){Ct.state='chargewind';Ct.t0=G.t;}else{Ct.tx=P.x+P.vx*.3;Ct.tz=P.z+P.vz*.3;Ct.state='tele';Ct.t0=G.t;}}break;
     case 'tele':{const k=e/.85;Ct.tCrouch=Math.min(1,k*1.6);Ct.glow=.85+k;Ct.yaw+=angd(Math.atan2(Ct.tx-Ct.x,Ct.tz-Ct.z),Ct.yaw)*Math.min(1,dt*6);W.cRing.position.set(Ct.tx,.04,Ct.tz);W.cRing.material.opacity=.45+.4*Math.sin(G.t*20);
       if(k>=1){const lx=Ct.tx-Ct.x,lz=Ct.tz-Ct.z,l=hyp(lx,lz)||1;Ct.sx=Ct.x;Ct.sz=Ct.z;Ct.ex=Ct.tx-lx/l*2.2;Ct.ez=Ct.tz-lz/l*2.2;Ct.state='pounce';Ct.t0=G.t;}}break;
     case 'pounce':{const k=Math.min(1,e/.5);Ct.x=Ct.sx+(Ct.ex-Ct.sx)*k;Ct.z=Ct.sz+(Ct.ez-Ct.sz)*k;Ct.y=Math.sin(k*Math.PI)*3;Ct.airK=k;Ct.glow=1.6;
@@ -240,11 +275,26 @@ function updateCat(dt){
     case 'bite':{const k=Math.min(1,e/.22);Ct.tBite=Math.sin(k*Math.PI);if(k>.45&&!Ct.bit){Ct.bit=true;const hx0=Ct.x+Math.sin(Ct.yaw)*3.4,hz0=Ct.z+Math.cos(Ct.yaw)*3.4;if(hyp(P.x-hx0,P.z-hz0)<2.1)hurt(1,Ct.x,Ct.z,true);}
       if(k>=1){Ct.state='recover';Ct.t0=G.t;Ct.rec=1.1;}}break;
     case 'hurt':Ct.tFl=1-e/.4;Ct.glow=.3;if(e>.4){Ct.state='hunt';Ct.t0=G.t;Ct.wait=.45;}break;
+    /* chapter 2: a paw swipe (blockable, but it shoves you far) */
+    case 'swipewind':turn(3);Ct.tSw=Math.min(1,e/.38);Ct.sweep=.75*Ct.tSw;Ct.glow=1.6;if(e>.42){Ct.state='swipe';Ct.t0=G.t;Ct.bit=false;}break;
+    case 'swipe':{const k=Math.min(1,e/.24);Ct.tSw=1-.3*k;Ct.sweep=.75-1.7*ease(k);
+      if(k>.35&&!Ct.bit){Ct.bit=true;const hx0=Ct.x+Math.sin(Ct.yaw)*2.7,hz0=Ct.z+Math.cos(Ct.yaw)*2.7;if(hyp(P.x-hx0,P.z-hz0)<2.7)hurt(1,Ct.x,Ct.z,true,15);}
+      if(k>=1){Ct.state='recover';Ct.t0=G.t;Ct.rec=.9;}}break;
+    /* chapter 2, below half health: a straight charge. Dodge it into a table leg or a wall and the cat is dazed. */
+    case 'chargewind':{const k=e/.9;Ct.tCrouch=Math.min(1,k*1.6);Ct.glow=.85+k;if(e<.55)Ct.yaw+=angd(want,Ct.yaw)*Math.min(1,dt*8);
+      const fx=Math.sin(Ct.yaw),fz=Math.cos(Ct.yaw);W.cLine.position.set(Ct.x+fx*8.5,.045,Ct.z+fz*8.5);W.cLine.rotation.y=Ct.yaw;W.cLine.material.opacity=.5+.2*Math.sin(G.t*20);
+      if(k>=1){Ct.state='charge';Ct.t0=G.t;Ct.bit=false;Ct.sx=Ct.x;Ct.sz=Ct.z;}}break;
+    case 'charge':{const fx=Math.sin(Ct.yaw),fz=Math.cos(Ct.yaw),nx=Ct.x+fx*15*dt,nz=Ct.z+fz*15*dt;Ct.glow=1.6;
+      if(!Ct.bit&&hyp(P.x-(Ct.x+fx*2.2),P.z-(Ct.z+fz*2.2))<2){Ct.bit=true;hurt(1,Ct.x,Ct.z,true,14);}
+      const leg=LEGS.some(q=>hyp(nx+fx*1.4-q[0],nz+fz*1.4-q[1])<q[2]+.8),wall=nx<-BX+2||nx>BX-2||nz<BZ0+2.5||nz>BZ1-2;
+      if(leg||wall){Ct.state='dizzy';Ct.t0=G.t;G.shake=Math.max(G.shake,.6);toast(leg?'고양이가 탁자 다리에 부딪혔다! 지금이다.':'고양이가 벽에 부딪혔다! 지금이다.',1.6);}
+      else if(hyp(nx-Ct.sx,nz-Ct.sz)>15){Ct.state='recover';Ct.t0=G.t;Ct.rec=.8;}else{Ct.x=nx;Ct.z=nz;Ct.mvA=15;}}break;
+    case 'dizzy':Ct.glow=.15;if(e>2.6){Ct.state='hunt';Ct.t0=G.t;Ct.wait=.5;}break;
     case 'leap':{const k=Math.min(1,e/Ct.dur);Ct.x=Ct.sx+(Ct.ex-Ct.sx)*k;Ct.z=Ct.sz+(Ct.ez-Ct.sz)*k;Ct.y=Math.sin(k*Math.PI)*3.6;Ct.airK=k;
       if(k>=1){Ct.y=0;G.shake=Math.max(G.shake,.4);if(Ct.next==='flee'){if(--Ct.leaps>0)leapTo(Ct.x+Math.sin(Ct.yaw)*9,Ct.z+Math.cos(Ct.yaw)*9,.6,'flee');else{W.cat.g.visible=false;hud();}}else{Ct.state='hunt';Ct.t0=G.t;Ct.wait=1.1;}}}break;}
   if(mv&&dt>0){Ct.x+=Math.sin(Ct.yaw)*mv*dt;Ct.z+=Math.cos(Ct.yaw)*mv*dt;Ct.x=Math.max(-BX+2,Math.min(BX-2,Ct.x));Ct.z=Math.max(BZ0+2.5,Math.min(BZ1-2,Ct.z));
     LEGS.forEach(l=>{const qx=Ct.x-l[0],qz=Ct.z-l[1],q=hyp(qx,qz),r=l[2]+1.3;if(q<r&&q>1e-4){Ct.x=l[0]+qx/q*r;Ct.z=l[1]+qz/q*r;}});}
-  Ct.mv=mv;Ct.turnV=dt>0?angd(Ct.yaw,y0)/dt:0;}
+  Ct.mv=Ct.mvA||mv;Ct.mvA=0;Ct.turnV=dt>0?angd(Ct.yaw,y0)/dt:0;}
 /* ═════════ animation ═════════ */
 const ease=x=>x<=0?0:x>=1?1:x*x*(3-2*x),lerp=(a,b,t)=>a+(b-a)*t;
 /* gait foot curve: u in [0,1) of a stride, `duty` of it on the ground moving back at body speed, the rest swinging forward */
@@ -254,7 +304,7 @@ const CLEG=[['shL','elL',.341,.490,.329,.340,.25,1],['shR','elR',.341,.490,.329,
 const catTailOff=[-.13,-.65],catBase=new T.Vector3();
 function animCat(dt){const R=W.cat,B=R.B,a=Ct.an,t=G.t;if(!R.g.visible)return;const sm1=v=>Math.min(1,dt*v);
   R.g.position.set(Ct.x,Ct.y,Ct.z);R.g.rotation.y=Ct.yaw;
-  a.stand+=((Ct.sleep?0:1)-a.stand)*sm1(2.5);a.crouch+=(Ct.tCrouch-a.crouch)*sm1(9);a.wind+=(Ct.tWind-a.wind)*sm1(14);a.fl+=(Ct.tFl-a.fl)*sm1(16);
+  a.stand+=((Ct.sleep?0:1)-a.stand)*sm1(2.5);a.crouch+=(Ct.tCrouch-a.crouch)*sm1(9);a.wind+=(Ct.tWind-a.wind)*sm1(14);a.fl+=(Ct.tFl-a.fl)*sm1(16);a.sw=(a.sw||0)+(Ct.tSw-(a.sw||0))*sm1(18);a.dz=(a.dz||0)+((Ct.state==='dizzy'?1:0)-(a.dz||0))*sm1(6);
   const moving=Math.abs(Ct.mv)>.1||Math.abs(Ct.turnV)>.5;a.walk+=((moving?1:0)-a.walk)*sm1(6);
   const AMP=.15,vL=Math.abs(Ct.mv)/3.2+Math.abs(Ct.turnV)*.22;a.ph+=.6*vL/(2*AMP)*dt*(Ct.mv<-.05?-1:1);
   const st=a.stand,cr=a.crouch,wd=a.wind,bt=Ct.tBite,fl=a.fl,air=Ct.airK,as=air>=0?Math.sin(air*Math.PI):0,br=Math.sin(t*(Ct.awake?2.6:1.2));
@@ -271,7 +321,10 @@ function animCat(dt){const R=W.cat,B=R.B,a=Ct.an,t=G.t;if(!R.g.visible)return;co
     const g=stride(((a.ph+L[6])%1+1)%1,.6,AMP,.09);let tz,ty;
     if(front){tz=.6+.34*(1-st)+.08*cr+g[0]*a.walk;ty=.07+g[1]*a.walk;}else{tz=.11-.39*st-.04*cr+g[0]*a.walk;ty=.05+g[1]*a.walk;}
     if(air>=0){tz=lerp(tz,front?1.0:-.62,as);ty=lerp(ty,front?.32:.24,as);}
-    ik2(up,lo,Sy,Sz,ty,tz,L[4],L[5],L[2],L[3],par);});
+    if(L[0]==='shR'&&a.sw>.01){ty=lerp(ty,.55,a.sw);tz=lerp(tz,.98,a.sw);}
+    ik2(up,lo,Sy,Sz,ty,tz,L[4],L[5],L[2],L[3],par);if(L[0]==='shR')up.rotation.z=-Ct.sweep*a.sw;});
+  R.head.rotation.z+=Math.sin(t*8)*.35*a.dz;B.hips.rotation.z+=Math.sin(t*4)*.08*a.dz;
+  W.stars.visible=a.dz>.15;if(W.stars.visible){W.stars.position.set(Ct.x+Math.sin(Ct.yaw)*1.8,Ct.y+4.3,Ct.z+Math.cos(Ct.yaw)*1.8);W.stars.rotation.y=t*4;W.stars.scale.setScalar(a.dz);}
   R.eyes.forEach(m=>m.emissiveIntensity+=(Ct.glow-m.emissiveIntensity)*.15);
   W.catL.position.set(Ct.x+Math.sin(Ct.yaw)*2.4,Ct.y+3.6,Ct.z+Math.cos(Ct.yaw)*2.4);W.catL.intensity=Ct.awake?.7:.15;
   /* tail: curled when asleep, low with a twitching tip when hunting, lashing and puffed when hurt */
@@ -305,6 +358,7 @@ function animHero(dt){const H=W.hero,B=H.B,U=H.U,t=G.t,play=G.state==='play',win
   if(dk){ax=lerp(ax,.15,dk);ay=0;az=lerp(az,-.15,dk);sx=lerp(sx,.2,dk);}
   if(win||G.state==='cut'||G.state==='intro'){const home=hyp(P.x+1.9,P.z+4.4)<.6?1:0;crx+=.2*home;hdx+=.15*home;ax=lerp(ax,-.1,.8);sx=lerp(sx,.4,.8);}
   const K=P.pose;if(K){crx+=K.crx||0;hdx+=K.hdx||0;hdy+=K.hdy||0;}
+  if(P.glue){const w=Math.sin(t*22)*Math.max(.25,1-(t-(P.mashT||0))*2);cry+=.35*w;crx+=.25;hdy+=.3*w;}
   nrx=-.55*crx*(1-dk)+.15*age+.45*dk+.5*rs;
   /* roll: the whole body turns once forward around its middle, curled up */
   const c=.45,rx=roll>=0?6.2832*ease(roll):0;U.position.set(0,c-c*Math.cos(rx),-c*Math.sin(rx));U.rotation.x=rx;
@@ -334,6 +388,16 @@ function updateCamera(dt){
   if(G.shake>0){const s=G.shake*.35;cx+=(Math.random()-.5)*s;cy+=(Math.random()-.5)*s;G.shake-=dt*1.6;}
   camera.position.set(cx,cy,cz);camera.lookAt(P.x+fx*2.2,1.4+(Ct.awake&&!G.catGone?.7:0),P.z+fz*2.2);
   if(G.camFrom){const e=1-ease((G.t-G.camFrom.t)/1.4);if(e<=0)G.camFrom=null;else{camera.position.lerp(G.camFrom.p,e);camera.quaternion.slerp(G.camFrom.q,e);}}}   /* ease out of a cutscene's last framing */
+/* rain: lightning through the window, drops from the leaking ceiling into the puddles */
+function envStep(){const ch=CH[G.ch],t=G.t;if(!ch.rain)return;
+  if(t>G.nextFlash&&G.state!=='intro'){G.flashT=t;G.nextFlash=t+9+Math.random()*9;G.thunder=t+.5+Math.random()*1.4;}
+  const f=t-G.flashT,fl=f<0?0:f<.07?1:f<.14?.15:f<.24?.8:f<.5?.3*(1-(f-.24)/.26):0;G.flash=fl;
+  W.key.intensity=ch.env.ki*(1+fl*4);W.hemi.intensity=ch.env.hemi*(1+fl*1.6);if(W.doorL)W.doorL.intensity=.9*(1+fl*5);
+  if(t>(G.thunder||1e9)){G.thunder=1e9;sfx('thunder');}
+  W.puddles.forEach(q=>{if(!q.on)return;const c=((t+q.off*3.7)%1.6)/1.6,fall=c<.5,pc=q.pc===undefined?c:q.pc;q.pc=c;
+    q.drop.visible=fall;if(fall)q.drop.position.set(q.x,.05+11*(1-Math.pow(c/.5,2)),q.z);
+    const rk=fall?1:(c-.5)/.5;q.rip.scale.setScalar(.15+rk*q.r*.75);q.rip.material.opacity=fall?0:.45*(1-rk);
+    if(pc<.5&&c>=.5&&W.cur===W.scene)sfx('plip',[q.x,.1,q.z,4]);});}
 function step(dt){
   G.t+=dt;if(G.inv>0)G.inv-=dt;if(G.t>G.msgT)$('toast').style.opacity=0;
   if(G.state==='play'){updatePlayer(dt);updateHuman(dt);if(G.state==='play'){if(Ct.awake||Ct.state==='leap')updateCat(dt);else updateCat(0);}}
@@ -347,5 +411,5 @@ function step(dt){
   const st=G.t-(W.spark.userData.t||-9);W.spark.material.opacity=st<.22?1-st/.22:0;W.spark.scale.setScalar(.4+st*7);
   W.key.position.set(P.x+7,12,P.z+1);W.key.target.position.set(P.x,0,P.z);
   W.fill.position.set(P.x-Math.sin(cam.yaw)*2.5,4,P.z-Math.cos(cam.yaw)*2.5);
-  W.dust.rotation.y=Math.sin(G.t*.05)*.05;W.dust.position.y=Math.sin(G.t*.2)*.4;W.shafts.forEach((m,i)=>m.material.opacity=.08+Math.sin(G.t*.5+i)*.02);
+  W.dust.rotation.y=Math.sin(G.t*.05)*.05;W.dust.position.y=Math.sin(G.t*.2)*.4;W.shafts.forEach((m,i)=>m.material.opacity=(m.userData.base||.08)*(1+Math.sin(G.t*.5+i)*.25));envStep();
   updateCamera(dt);}

@@ -47,7 +47,7 @@ body{word-break:keep-all;background:var(--bg);color:var(--ink);font-family:var(-
 .pad button.on{background:var(--accent);color:#17110a}
 .card{position:fixed;inset:0;display:none;place-items:center;padding:20px;background:rgba(3,4,8,.55)}
 .card.show{display:grid}
-.card div{max-width:30em;display:flex;flex-direction:column;gap:14px;align-items:flex-start}
+.card>div{max-width:30em;display:flex;flex-direction:column;gap:14px;align-items:flex-start}
 .card .eyebrow{font-size:12px;letter-spacing:.1em;color:var(--accent);font-weight:600}
 .card h1{font-family:var(--display);font-size:clamp(30px,8.6vw,54px);line-height:1.12;text-wrap:balance;text-shadow:0 2px 20px #000}
 .card p{font-size:15px;line-height:1.7;color:var(--ink);text-shadow:0 1px 8px #000}
@@ -57,6 +57,40 @@ body{word-break:keep-all;background:var(--bg);color:var(--ink);font-family:var(-
 .card button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:400;font-size:14px;padding:14px 16px}
 .card button:disabled{background:transparent;color:var(--muted);border:1px solid var(--line)}
 button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+/* landing: hero over the live home scene, then the five nights */
+.card.land{display:none;overflow-y:auto;overflow-x:hidden;grid-template-columns:minmax(0,1fr);place-items:start center;padding:0;background:linear-gradient(to bottom,rgba(3,4,8,.25) 0,rgba(3,4,8,.55) 60vh,rgba(3,4,8,.92) 100vh,#05070c 140vh);scroll-behavior:smooth}
+.card.land.show{display:grid}
+.card.land>.lwrap{max-width:1180px;width:100%;gap:0;align-items:stretch}
+.hero{min-height:100svh;display:flex;flex-direction:column;justify-content:center;gap:16px;padding:48px 20px 72px;max-width:36em;position:relative}
+.hero h1{font-family:var(--display);font-size:clamp(40px,11vw,84px);line-height:1.05;text-shadow:0 2px 24px #000}
+.hero .lead{font-size:16px;line-height:1.75;text-shadow:0 1px 10px #000;max-width:30em}
+.hero .keys{font-size:13px;color:var(--muted)}
+.more{position:absolute;left:20px;bottom:26px;color:var(--muted);font-size:13px;text-decoration:none;letter-spacing:.05em}
+.more:hover{color:var(--ink)}
+.sect{padding:56px 20px;display:flex;flex-direction:column;gap:14px}
+.sect h2{font-family:var(--display);font-size:clamp(26px,6vw,38px)}
+.sub2{color:var(--muted);font-size:15px;line-height:1.6}
+.chlist{list-style:none;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-top:10px}
+.ch{display:flex;flex-direction:column;background:rgba(14,16,24,.82);border:1px solid var(--line);border-radius:8px;overflow:hidden;min-width:0}
+.ch.locked{opacity:.72}
+.ch .art{height:128px;position:relative;display:grid;place-items:center}
+.ch .art svg{width:76px;height:76px;filter:drop-shadow(0 4px 14px rgba(0,0,0,.5))}
+.ch .art .num{position:absolute;left:12px;top:10px;font-size:12px;letter-spacing:.15em;font-weight:600;color:rgba(255,255,255,.85)}
+.ch .art .chip{position:absolute;right:10px;top:9px;font-size:11px;font-weight:600;padding:4px 8px;border-radius:20px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.25)}
+.ch .art .chip.done{background:var(--accent);color:#17110a;border-color:var(--accent)}
+.ch .bd{padding:14px 14px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
+.ch h3{font-family:var(--display);font-size:21px}
+.ch .meta{font-size:12px;color:var(--accent);font-weight:600}
+.ch p{font-size:13.5px;line-height:1.6;color:var(--ink);opacity:.9}
+.ch ul{font-size:12.5px;color:var(--muted);padding-left:16px;line-height:1.6}
+.ch button{margin-top:auto;font:600 14px/1 var(--body);color:#17110a;background:var(--accent);border:0;border-radius:4px;padding:12px 14px;cursor:pointer}
+.ch button:disabled{background:transparent;color:var(--muted);border:1px solid var(--line);cursor:default}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.two>div{display:flex;flex-direction:column;gap:12px}
+.how{padding-left:18px;display:flex;flex-direction:column;gap:10px;font-size:14.5px;line-height:1.65}
+.note{font-size:14.5px;line-height:1.7;color:var(--muted)}
+@media (max-width:1100px){.chlist{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:760px){.chlist{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;margin:10px -20px 0;padding:0 20px 8px}.ch{flex:0 0 78%;scroll-snap-align:start}.two{grid-template-columns:1fr}.sect{padding:40px 16px}.hero{padding:40px 16px 72px}.more{left:16px}}
 #err{position:fixed;inset:0;display:none;place-items:center;padding:24px;text-align:center;line-height:1.6}
 @media (min-width:800px){.hud{padding:22px 28px 40px}}
 /* cutscenes: letterbox, subtitles, chapter title, fade, skip */
@@ -78,7 +112,7 @@ body.cine #skip{display:block}
 <canvas id="stage" aria-label="쥐 가장을 조작하는 3D 게임 화면"></canvas>
 <div id="hurt"></div>
 <div class="hud" id="hud" style="display:none">
-  <div class="hudrow"><div class="pips" id="pips" aria-label="체력"></div><div class="food">먹이 <b id="foodn">0</b> / 5</div></div>
+  <div class="hudrow"><div class="pips" id="pips" aria-label="체력"></div><div class="food">먹이 <b id="foodn">0</b> / <span id="foodq">5</span></div></div>
   <div id="goal"></div>
   <div id="boss"><span>부엌의 주인, 고양이</span><div id="bossbar"><i></i></div></div>
 </div>
@@ -94,19 +128,36 @@ body.cine #skip{display:block}
   <button type="button" id="b-atk">칼</button>
   <button type="button" id="b-shd">방패</button>
 </div>
-<div class="card show" id="intro"><div>
-  <span class="eyebrow">제1장 · 첫 번째 밤</span>
-  <h1>쥐구멍에도 볕 들 날</h1>
-  <p>벽 속에는 식구 넷이 산다. 벽 밖에는 덫과 고양이, 그리고 거대한 발이 있다. 그래도 아버지는 매일 밤 문턱을 넘는다.</p>
-  <p>먹이 다섯 개를 구해 집으로 돌아가세요. 덫은 칼로 먼저 쳐서 터뜨리면 치즈를 얻습니다. 고양이를 집까지 달고 갈 수는 없습니다.</p>
-  <p class="keys" id="keys"></p>
-  <span class="btns"><button type="button" id="go" disabled>캐릭터를 조형하는 중…</button><button type="button" class="ghost qbtn" aria-label="화질 바꾸기"></button><button type="button" class="ghost sbtn" aria-label="소리 켜고 끄기"></button></span>
+<div class="card show land" id="intro"><div class="lwrap">
+  <header class="hero">
+    <span class="eyebrow">아버지의 다섯 밤</span>
+    <h1>쥐구멍에도<br>볕 들 날</h1>
+    <p class="lead">벽 속에는 식구 넷이 산다. 벽 밖에는 덫과 고양이, 그리고 거대한 발이 있다. 그래도 아버지는 매일 밤 문턱을 넘는다.</p>
+    <span class="btns"><button type="button" id="go" disabled>캐릭터를 조형하는 중…</button><button type="button" class="ghost qbtn" aria-label="화질 바꾸기"></button><button type="button" class="ghost sbtn" aria-label="소리 켜고 끄기"></button></span>
+    <p class="keys" id="keys"></p>
+    <a class="more" href="#chs">다섯 밤 보기 ↓</a>
+  </header>
+  <section class="sect" id="chs" aria-labelledby="chs-h">
+    <h2 id="chs-h">다섯 밤</h2>
+    <p class="sub2">밤이 지날수록 부엌은 위험해지고, 아버지는 늙어 가고, 아이들은 자란다.</p>
+    <ol class="chlist" id="chlist"></ol>
+  </section>
+  <section class="sect two">
+    <div><h2>어떻게 하나요</h2>
+      <ul class="how">
+        <li><b>먹이를 모으세요.</b> 부스러기를 줍고, 덫은 칼로 먼저 쳐서 터뜨린 뒤 치즈를 꺼냅니다.</li>
+        <li><b>그림자가 커지면 피하세요.</b> 거대한 발이 내려옵니다. 굴러서 빠져나가세요.</li>
+        <li><b>고양이를 물리쳐야 집에 갈 수 있습니다.</b> 방패로 막고, 덮친 직후의 빈틈을 노리세요. 방울 소리로 고양이가 어디 있는지 들을 수 있습니다.</li>
+      </ul></div>
+    <div><h2>만든 방식</h2>
+      <p class="note">캐릭터와 털, 집 안 소품, 효과음과 음악까지 외부 모델이나 음원 없이 모두 코드로 빚었습니다. 처음 열 때 캐릭터를 조형하느라 잠시 걸리고, 다음부터는 바로 열립니다. 헤드폰을 끼면 고양이의 방울 소리가 어느 쪽에서 나는지 들립니다.</p></div>
+  </section>
 </div></div>
 <div class="card" id="end"><div>
   <span class="eyebrow" id="endeye"></span>
   <h1 id="endh"></h1>
   <p id="endp"></p>
-  <span class="btns"><button type="button" id="again">다시 나서기</button><button type="button" class="ghost qbtn" aria-label="화질 바꾸기"></button><button type="button" class="ghost sbtn" aria-label="소리 켜고 끄기"></button></span>
+  <span class="btns"><button type="button" id="next" style="display:none"></button><button type="button" id="again">다시 나서기</button><button type="button" class="ghost" id="tohome">처음 화면</button><button type="button" class="ghost qbtn" aria-label="화질 바꾸기"></button><button type="button" class="ghost sbtn" aria-label="소리 켜고 끄기"></button></span>
 </div></div>
 <div id="err">이 기기에서 3D(WebGL)를 켤 수 없습니다. 다른 브라우저에서 다시 열어 주세요.</div>
 
@@ -320,6 +371,35 @@ function whiskers(par,roots,len,rad,spread){const mat=sm(0xbfb9ae,{emissive:0x10
     const cu=new T.QuadraticBezierCurve3(new T.Vector3(r[0],r[1],r[2]),new T.Vector3(r[0]+s*l*.5,r[1]+a*l*.4+l*.05,r[2]+l*.12),new T.Vector3(r[0]+s*l,r[1]+a*l-l*.08,r[2]-l*.1));
     par.add(M(new T.TubeGeometry(cu,8,rad,3,false),mat,false));}});}
 
+/* ═════════ chapters: the five nights ═════════ */
+/* Everything that differs between nights lives here: goals, map layout, light, cat patterns, music, texts.
+   play:false chapters are shown on the landing page only. Positions are kitchen world coordinates. */
+const CH={
+  1:{play:true,title:'첫 번째 밤',season:'가을',hp:5,quota:5,catHp:6,
+    blurb:'벽 속 식구 넷을 먹이려고 아버지가 처음 부엌에 나선다. 덫과 거대한 발, 그리고 잠든 고양이.',
+    feat:['덫 터뜨려 치즈 얻기','인간 발 피하기','고양이와 첫 싸움'],
+    crumbs:[[3.5,-1.5],[-10,6],[1,12]],traps:[[-1,3.2,.4],[10,9.5,-1],[-8,14,2],[4,20.5,.3]],glue:[],puddles:[],
+    cat:[11,21,-2.5],swipe:false,charge:false,rain:false,music:'night',
+    env:{fog:0x070a12,near:9,far:40,key:0x8fb2ff,ki:1.1,hemi:.7,shaft:.08},
+    end:['제1장 끝','오늘 저녁은 치즈 다섯 조각','내일 밤에도 그는 다시 문턱을 넘을 것이다.']},
+  2:{play:true,title:'비 오는 밤',season:'장마',hp:5,quota:6,catHp:8,
+    blurb:'지붕이 새고 아이들이 떤다. 젖은 바닥은 미끄럽고 끈끈이가 숨어 있다. 고양이는 이제 앞발을 휘두르고, 화가 나면 돌진한다.',
+    feat:['미끄러운 물웅덩이','끈끈이 — 칼을 연타해 떼어내기','앞발 휘두르기 · 돌진하는 고양이'],
+    crumbs:[[-12,1.5],[6,3.6],[-3.5,11],[12.5,15]],traps:[[2.2,7,.8],[-9.5,17.5,1.6],[8.5,21.5,-.4]],
+    glue:[[-1.2,1.8,.1],[9,11.2,.6],[-7.5,9.6,.3],[1.5,16.3,-.2]],
+    puddles:[[-3.4,5.2,1.7],[4.4,9.6,1.4],[-10.4,11.6,1.9],[2.8,19.4,1.6],[11.6,6.6,1.3]],
+    cat:[-9,22,2.6],swipe:true,charge:true,rain:true,music:'rain',
+    env:{fog:0x04070d,near:7,far:32,key:0x6f88b8,ki:.7,hemi:.5,shaft:.035},
+    end:['제2장 끝','여섯 조각, 그리고 마른 이불','빗소리가 그칠 무렵, 막내의 기침은 더 깊어져 있었다.']},
+  3:{play:false,title:'약을 구하러',season:'초겨울',blurb:'막내의 기침이 멎지 않는다. 약은 찬장 꼭대기에 있다. 처음으로, 아버지는 두렵다.',feat:['의자와 서랍 오르기','통발 덫','흰 털 몇 가닥 · 체력 4']},
+  4:{play:false,title:'겨울밤',season:'한겨울',blurb:'촛불이 다 타기 전에 돌아와야 한다. 상처 입은 고양이가 다시 일어섰다.',feat:['촛불 시간 제한','먹으면 안 되는 쥐약 미끼','고양이 2차전']},
+  5:{play:false,title:'볕 드는 날',season:'봄 새벽',blurb:'마지막 밤. 아버지는 이제 혼자 문턱을 넘지 않는다.',feat:['다 자란 아들과 함께','고양이 최종전','새벽 햇살']}
+};
+const CHN=['','제1장','제2장','제3장','제4장','제5장'],KNUM=['','한','두','세','네','다섯','여섯','일곱'];
+/* progress: which nights have been cleared (survives reloads; works without storage too) */
+const PROG={done:{}};
+try{const v=JSON.parse(localStorage.getItem('mf.done')||'{}');if(v&&typeof v==='object')PROG.done=v;}catch(e){}
+function markDone(n){PROG.done[n]=1;try{localStorage.setItem('mf.done',JSON.stringify(PROG.done));}catch(e){}}
 
 /* ═════════ characters (real-fur version) ═════════ */
 const MC={fur:hx(0x7a5e46),belly:hx(0xd8c7ae),skin:hx(0xc98f86)};
@@ -426,12 +506,12 @@ function buildHuman(){const g=new T.Group();g.add(at(M(new T.SphereGeometry(1,28
   g.add(at(M(new T.CylinderGeometry(.72,.8,24,24),sm(0x1b2030)),0,12.6,-1.1));g.add(at(M(new T.CylinderGeometry(.9,.9,.5,24),sm(0x1b2030)),0,1.25,-1.1));return g;}
 
 /* ═════════ world ═════════ */
-const HOME={x:-3.2,z:-6.2},BX=15,BZ0=-6.1,BZ1=25,QUOTA=5,HS=1.5;
+const HOME={x:-3.2,z:-6.2},BX=15,BZ0=-6.1,BZ1=25,HS=1.5;
 const LEGS=[[-5,7,.75],[7,7,.75],[-5,17,.75],[7,17,.75],[11,2,.4],[13.5,2,.4],[11,4.5,.4],[13.5,4.5,.4]];
 const W={};
 function buildWorld(){
   const scene=W.scene=new T.Scene();scene.background=new T.Color(0x05070c);scene.fog=new T.Fog(0x070a12,9,40);
-  scene.add(new T.HemisphereLight(0x3a4c70,0x14100c,.7));
+  scene.add(W.hemi=new T.HemisphereLight(0x3a4c70,0x14100c,.7));
   const key=W.key=new T.DirectionalLight(0x8fb2ff,1.1);key.castShadow=true;const sc=key.shadow.camera;sc.left=-13;sc.right=13;sc.top=13;sc.bottom=-13;sc.near=1;sc.far=50;
   key.shadow.mapSize.set(1024,1024);key.shadow.bias=-.0004;key.shadow.normalBias=.04;scene.add(key);scene.add(key.target);
   const rim=new T.DirectionalLight(0x9fc0ff,.6);rim.position.set(-6,7,-6);scene.add(rim);
@@ -450,15 +530,30 @@ function buildWorld(){
   const wood=sm(0x5a4632);LEGS.forEach(l=>scene.add(at(M(new T.BoxGeometry(l[2]*1.25,24,l[2]*1.25),wood),l[0],12,l[1])));
   scene.add(at(M(new T.BoxGeometry(15,.6,13),wood),1,19,12));scene.add(at(M(new T.BoxGeometry(4,.4,4),wood),12.25,11,3.25));
   /* food crumbs */
-  W.crumbs=[[3.5,-1.5],[-10,6],[1,12]].map((p,i)=>{const g=new T.Group(),r=rnd(20+i);for(let k=0;k<4;k++){const c=M(new T.DodecahedronGeometry(.16+r()*.1,0),sm(0xc79a52,{roughness:.9,emissive:0x2a1a04}));c.position.set((r()-.5)*.35,.14+r()*.1,(r()-.5)*.35);c.rotation.set(r()*3,r()*3,r()*3);g.add(c);}
+  W.crumbs=[0,0,0,0].map((p,i)=>{p=[0,0];const g=new T.Group(),r=rnd(20+i);for(let k=0;k<4;k++){const c=M(new T.DodecahedronGeometry(.16+r()*.1,0),sm(0xc79a52,{roughness:.9,emissive:0x2a1a04}));c.position.set((r()-.5)*.35,.14+r()*.1,(r()-.5)*.35);c.rotation.set(r()*3,r()*3,r()*3);g.add(c);}
     const gl=new T.Mesh(new T.CircleGeometry(.9,24),new T.MeshBasicMaterial({color:0xffb040,transparent:true,opacity:.22,blending:T.AdditiveBlending,depthWrite:false,fog:false}));gl.rotation.x=-Math.PI/2;gl.position.y=.03;g.add(gl);
     g.position.set(p[0],0,p[1]);scene.add(g);return{g,x:p[0],z:p[1],got:false};});
-  W.traps=[[-1,3.2,.4],[10,9.5,-1],[-8,14,2],[4,20.5,.3]].map(p=>{const t=buildTrap();t.g.position.set(p[0],0,p[1]);t.g.rotation.y=p[2];t.g.scale.setScalar(1.3);scene.add(t.g);
+  W.traps=[0,0,0,0].map(()=>{const p=[0,0,0];const t=buildTrap();t.g.position.set(p[0],0,p[1]);t.g.rotation.y=p[2];t.g.scale.setScalar(1.3);scene.add(t.g);
     t.x=p[0];t.z=p[1];t.bx=p[0]+Math.cos(p[2])*.42*1.3;t.bz=p[1]-Math.sin(p[2])*.42*1.3;t.state=0;t.t0=0;t.got=false;return t;});
   W.human=buildHuman();W.human.position.set(0,30,0);scene.add(W.human);
   const ringM=c=>new T.MeshBasicMaterial({color:c,transparent:true,opacity:0,depthWrite:false,fog:false,side:T.DoubleSide});
   W.hShadow=new T.Mesh(new T.CircleGeometry(2.7,32),ringM(0x000000));W.hRing=new T.Mesh(new T.RingGeometry(2.5,2.7,40),ringM(0xff5a3a));
   W.cRing=new T.Mesh(new T.RingGeometry(1.9,2.1,40),ringM(0x9ad94a));
+  W.cLine=new T.Mesh(new T.PlaneGeometry(1.6,15),ringM(0xff6a3a));W.cLine.rotation.x=-Math.PI/2;W.cLine.rotation.order='YXZ';scene.add(W.cLine);
+  /* chapter 2 props: glue boards, puddles under ceiling leaks */
+  const glueM=new T.MeshPhysicalMaterial({color:0x9a7628,roughness:.3,clearcoat:1,clearcoatRoughness:.1,envMap:env(),envMapIntensity:.6}),glueB=sm(0x8a7c62,{roughness:.95});
+  W.glue=[0,0,0,0].map(()=>{const g2=new T.Group();g2.add(at(M(new T.BoxGeometry(1.9,.03,1.25),glueB),0,.015,0));g2.add(at(M(new T.BoxGeometry(1.7,.02,1.05),glueM,false),0,.04,0));
+    const r=rnd(77);for(let k=0;k<5;k++)g2.add(at(M(new T.SphereGeometry(.03,6,5),sm(0x15110c),false),(r()-.5)*1.4,.05,(r()-.5)*.8));
+    g2.scale.setScalar(1.25);scene.add(g2);return{g:g2,x:0,z:0,on:false};});
+  const pudM=sm(0x05070b,{roughness:.06,metalness:.25,envMapIntensity:.5,transparent:true,opacity:.8,polygonOffset:true,polygonOffsetFactor:-2});
+  const ripM=new T.MeshBasicMaterial({color:0x9fb8e0,transparent:true,opacity:0,blending:T.AdditiveBlending,depthWrite:false});
+  W.puddles=[0,0,0,0,0].map((p,i)=>{const r=rnd(40+i),sh=new T.Shape();for(let k=0;k<=24;k++){const a=k/24*6.283,rr=1+.18*Math.sin(a*3+r()*6)+.08*Math.sin(a*5+i);k?sh.lineTo(Math.cos(a)*rr,Math.sin(a)*rr):sh.moveTo(rr,0);}
+    const m=new T.Mesh(new T.ShapeGeometry(sh),pudM);m.rotation.x=-Math.PI/2;m.receiveShadow=true;m.position.y=.012;scene.add(m);
+    const rip=new T.Mesh(new T.RingGeometry(.8,.9,32),ripM.clone());rip.rotation.x=-Math.PI/2;rip.position.y=.02;scene.add(rip);
+    const drop=new T.Mesh(new T.SphereGeometry(.05,8,6),new T.MeshBasicMaterial({color:0xbcd0f0,transparent:true,opacity:.8,fog:false}));drop.scale.y=2.4;scene.add(drop);
+    return{m,rip,drop,x:0,z:0,r:1,on:false,off:i*.37};});
+  W.stars=new T.Group();for(let k=0;k<3;k++)W.stars.add(at(new T.Mesh(new T.OctahedronGeometry(.14,0),new T.MeshBasicMaterial({color:0xffe080,blending:T.AdditiveBlending,depthWrite:false,fog:false})),Math.cos(k*2.09)*.9,0,Math.sin(k*2.09)*.9));
+  W.stars.visible=false;scene.add(W.stars);
   [W.hShadow,W.hRing,W.cRing].forEach((m,i)=>{m.rotation.x=-Math.PI/2;m.position.y=.03+i*.005;scene.add(m);});
   W.spark=new T.Mesh(new T.SphereGeometry(.5,12,10),new T.MeshBasicMaterial({color:0xfff0c0,transparent:true,opacity:0,blending:T.AdditiveBlending,depthWrite:false,fog:false}));scene.add(W.spark);
   W.cat=buildCat();W.cat.g.scale.setScalar(3.2);scene.add(W.cat.g);
@@ -470,39 +565,49 @@ function buildWorld(){
 }
 
 /* ═════════ game state ═════════ */
-const G={state:'intro',t:0,hp:5,food:0,inv:0,shake:0,msgT:0,catGone:false},P={},Ct={},Hm={},In={x:0,y:0,atk:false,shd:false,dash:false},keys={};
+const G={state:'intro',t:0,hp:5,food:0,inv:0,shake:0,msgT:0,catGone:false,ch:1,quota:5,hpMax:5,flashT:-9,nextFlash:8},P={},Ct={},Hm={},In={x:0,y:0,atk:false,shd:false,dash:false},keys={};
 const cam={yaw:0,pitch:.28,manual:-9};
 const angd=(a,b)=>{let d=a-b;while(d>Math.PI)d-=6.2832;while(d<-Math.PI)d+=6.2832;return d;};
 const hyp=Math.hypot;
 function toast(s,d){const e=$('toast');e.textContent=s;e.style.opacity=1;G.msgT=G.t+(d||2.4);}
-function hud(){const p=$('pips');let h='';for(let i=0;i<5;i++)h+='<i'+(i<G.hp?'':' class="off"')+'></i>';p.innerHTML=h;$('foodn').textContent=G.food;
-  $('goal').textContent=G.food<QUOTA?'먹이를 찾아라. 덫의 치즈는 칼로 덫을 먼저 터뜨리고 줍는다.':!G.catGone?'고양이를 물리쳐라. 덮친 직후가 빈틈이다.':'집으로 돌아가라.';
-  $('boss').style.display=Ct.awake&&!G.catGone?'flex':'none';$('bossbar').firstElementChild.style.width=Math.max(0,Ct.hp/6*100)+'%';}
+function hud(){const p=$('pips');let h='';for(let i=0;i<G.hpMax;i++)h+='<i'+(i<G.hp?'':' class="off"')+'></i>';p.innerHTML=h;$('foodn').textContent=G.food;$('foodq').textContent=G.quota;
+  $('goal').textContent=P.glue?'끈끈이에 붙었다. 칼을 연타해 떼어내라!':G.food<G.quota?(G.ch===2?'먹이를 찾아라. 물웅덩이는 미끄럽고, 노란 판은 끈끈이다.':'먹이를 찾아라. 덫의 치즈는 칼로 덫을 먼저 터뜨리고 줍는다.'):!G.catGone?(G.ch===2&&Ct.hp<=Ct.hpMax/2?'돌진을 굴러서 피해 탁자 다리에 부딪히게 하라.':'고양이를 물리쳐라. 덮친 직후가 빈틈이다.'):'집으로 돌아가라.';
+  $('boss').style.display=Ct.awake&&!G.catGone?'flex':'none';$('bossbar').firstElementChild.style.width=Math.max(0,Ct.hp/Ct.hpMax*100)+'%';}
 function reset(){
-  Object.assign(G,{hp:5,food:0,inv:0,shake:0,catGone:false});
-  Object.assign(P,{x:-3.2,z:-3.6,yaw:0,kx:0,kz:0,atk:-9,hit:false,dash:0,dashCd:0,dx:0,dz:1,run:0,ph:0,sp:0,combo:0,hurtT:-9,pickT:-9,blkT:-9,deadT:-9,age:0,pose:null});
-  Object.assign(Ct,{x:11,z:21,y:0,yaw:-2.5,state:'doze',t0:0,hp:6,awake:false,wait:1,bit:false,leaps:0,mv:0,turnV:0,sleep:1,tCrouch:0,tWind:0,tBite:0,tFl:0,airK:-1,glow:.1,
+  const ch=CH[G.ch];Object.assign(G,{hp:ch.hp,hpMax:ch.hp,quota:ch.quota,food:0,inv:0,shake:0,catGone:false,nextFlash:G.t+6});
+  Object.assign(P,{x:-3.2,z:-3.6,yaw:0,kx:0,kz:0,atk:-9,hit:false,dash:0,dashCd:0,dx:0,dz:1,run:0,ph:0,sp:0,combo:0,hurtT:-9,pickT:-9,blkT:-9,deadT:-9,age:0,pose:null,glue:null,stuck:0,wet:0,slx:0,slz:0});
+  Object.assign(Ct,{x:ch.cat[0],z:ch.cat[1],y:0,yaw:ch.cat[2],state:'doze',t0:0,hp:ch.catHp,hpMax:ch.catHp,tSw:0,sweep:0,awake:false,wait:1,bit:false,leaps:0,mv:0,turnV:0,sleep:1,tCrouch:0,tWind:0,tBite:0,tFl:0,airK:-1,glow:.1,
     an:{stand:0,crouch:0,wind:0,fl:0,walk:0,ph:0,puff:1}});
   Object.assign(Hm,{state:'wait',t0:G.t,next:4,tx:0,tz:8,yaw:0});
   cam.yaw=0;cam.pitch=.28;
-  W.crumbs.forEach(c=>{c.got=false;c.g.visible=true;});W.traps.forEach(t=>{t.state=0;t.got=false;t.bait.visible=true;t.pv.rotation.z=0;});
+  layout(ch);
   W.cat.g.visible=true;W.human.position.y=30;[W.hShadow,W.hRing,W.cRing].forEach(m=>m.material.opacity=0);hud();}
-function hurt(n,sx,sz,blockable){
+/* place this night's food, traps, glue and puddles; unused props are parked as already spent */
+function layout(ch){
+  W.crumbs.forEach((c,i)=>{const p=ch.crumbs[i];c.got=!p;c.g.visible=!!p;if(p){c.x=p[0];c.z=p[1];c.g.position.set(p[0],0,p[1]);}});
+  W.traps.forEach((t,i)=>{const p=ch.traps[i];t.g.visible=!!p;t.pv.rotation.z=0;t.bait.visible=!!p;t.state=p?0:2;t.got=!p;
+    if(p){t.g.position.set(p[0],0,p[1]);t.g.rotation.y=p[2];t.g.scale.setScalar(1.3);t.x=p[0];t.z=p[1];t.bx=p[0]+Math.cos(p[2])*.42*1.3;t.bz=p[1]-Math.sin(p[2])*.42*1.3;}});
+  W.glue.forEach((q,i)=>{const p=ch.glue[i];q.on=!!p;q.g.visible=!!p;if(p){q.x=p[0];q.z=p[1];q.ry=p[2];q.g.position.set(p[0],0,p[1]);q.g.rotation.y=p[2];}});
+  W.puddles.forEach((q,i)=>{const p=ch.puddles[i];q.on=!!p;q.m.visible=q.rip.visible=q.drop.visible=!!p;if(p){q.x=p[0];q.z=p[1];q.r=p[2];q.m.position.set(p[0],.012,p[1]);q.m.scale.setScalar(p[2]);q.rip.position.set(p[0],.02,p[1]);}});
+  const e=ch.env;W.scene.fog.color.setHex(e.fog);W.scene.fog.near=e.near;W.scene.fog.far=e.far;W.key.color.setHex(e.key);W.key.intensity=e.ki;W.hemi.intensity=e.hemi;W.shafts.forEach(m=>m.userData.base=e.shaft);
+  $('foodq').textContent=ch.quota;}
+function hurt(n,sx,sz,blockable,kb){
   if(G.state!=='play'||G.inv>0||P.dash>0)return false;
   const dx=P.x-sx,dz=P.z-sz,l=hyp(dx,dz)||1;
-  if(blockable&&In.shd&&Math.abs(angd(Math.atan2(-dx,-dz),P.yaw))<1.25){P.kx=dx/l*7;P.kz=dz/l*7;G.shake=.25;spark(P.x-dx/l*.6,1,P.z-dz/l*.6);toast('막았다!',1);G.inv=.35;P.blkT=G.t;return false;}
+  if(blockable&&In.shd&&Math.abs(angd(Math.atan2(-dx,-dz),P.yaw))<1.25){P.kx=dx/l*(kb||7);P.kz=dz/l*(kb||7);G.shake=kb?.45:.25;spark(P.x-dx/l*.6,1,P.z-dz/l*.6);toast('막았다!',1);G.inv=.35;P.blkT=G.t;return false;}
   G.hp-=n;P.hurtT=G.t;G.inv=1.3;G.shake=.5;P.kx=dx/l*9;P.kz=dz/l*9;$('hurt').style.opacity=1;setTimeout(()=>$('hurt').style.opacity=0,200);hud();
   if(G.hp<=0)finish(false);return true;}
 function spark(x,y,z){W.spark.position.set(x,y,z);W.spark.userData.t=G.t;}
-function getFood(){G.food++;P.pickT=G.t;hud();if(G.food===QUOTA){toast('다섯 조각. 이제 집으로.',2.6);if(!Ct.awake)setTimeout(()=>{if(G.state==='play')wakeCat(true);},1800);}else toast('먹이 '+G.food+' / '+QUOTA,1.2);}
+function getFood(){G.food++;P.pickT=G.t;hud();if(G.food===G.quota){toast(KNUM[G.quota]+' 조각. 이제 집으로.',2.6);if(!Ct.awake)setTimeout(()=>{if(G.state==='play')wakeCat(true);},1800);}else toast('먹이 '+G.food+' / '+G.quota,1.2);}
 function wakeCat(block){if(Ct.awake||G.catGone)return;Ct.awake=true;toast('고양이가 눈을 떴다.',2.4);hud();
   if(block){const dx=HOME.x-P.x,dz=HOME.z+2-P.z,l=hyp(dx,dz)||1,d=Math.min(l*.6,7);leapTo(P.x+dx/l*d,P.z+dz/l*d,1.1,'hunt');}else{Ct.state='hunt';Ct.t0=G.t;Ct.wait=.8;}}
 function leapTo(x,z,dur,next){Ct.sx=Ct.x;Ct.sz=Ct.z;Ct.ex=Math.max(-BX+2,Math.min(BX-2,x));Ct.ez=Math.max(BZ0+2.5,Math.min(BZ1-2,z));Ct.dur=dur;Ct.next=next;Ct.state='leap';Ct.t0=G.t;Ct.yaw=Math.atan2(Ct.ex-Ct.sx,Ct.ez-Ct.sz);}
 function finish(win){G.state=win?'win':'dead';if(!win)P.deadT=G.t;$('toast').style.opacity=0;G.msgT=0;$('hud').style.display='none';$('pad').style.display='none';$('joy').style.display='none';
-  $('endeye').textContent=win?'제1장 끝':'쓰러지다';$('endh').textContent=win?'오늘 저녁은 치즈 다섯 조각':'아직 끝낼 수 없다';
-  $('endp').textContent=win?'내일 밤에도 그는 다시 문턱을 넘을 것이다. 제2장 ‘비 오는 밤’은 다음 업데이트에서 이어집니다.':'문간의 불빛이 아직 꺼지지 않았다. 식구들이 기다린다. 다시 일어서야 한다.';
-  $('again').textContent=win?'다시 나서기':'다시 일어서기';if(win)startReturn();else setTimeout(()=>$('end').classList.add('show'),700);}
-function begin(){reset();heroTo(W.scene);W.homeFood.visible=false;G.state='play';$('intro').classList.remove('show');$('end').classList.remove('show');$('hud').style.display='flex';if(touch)$('pad').style.display='grid';toast('먹이 다섯 개를 구해 돌아오자.',2.6);}
+  const ch=CH[G.ch],nx=CH[G.ch+1];P.glue=null;
+  $('endeye').textContent=win?ch.end[0]:CHN[G.ch]+' · 쓰러지다';$('endh').textContent=win?ch.end[1]:'아직 끝낼 수 없다';
+  $('endp').textContent=win?ch.end[2]+(nx&&nx.play?'':' 다음 장은 준비 중입니다.'):'문간의 불빛이 아직 꺼지지 않았다. 식구들이 기다린다. 다시 일어서야 한다.';
+  $('again').textContent=win?'이 밤 다시 하기':'다시 일어서기';if(win)startReturn();else{endButtons(false);setTimeout(()=>$('end').classList.add('show'),700);}}
+function begin(){reset();heroTo(W.scene);W.homeFood.visible=false;G.state='play';$('intro').classList.remove('show');$('end').classList.remove('show');$('hud').style.display='flex';if(touch)$('pad').style.display='grid';toast('먹이 '+KNUM[G.quota]+' 개를 구해 돌아오자.',2.6);}
 
 /* ═════════ update ═════════ */
 function collide(){
@@ -516,9 +621,16 @@ function updatePlayer(dt){
   let l=hyp(ix,iy);if(l>1){ix/=l;iy/=l;l=1;}
   const fx=Math.sin(cam.yaw),fz=Math.cos(cam.yaw),mx=fx*iy-fz*ix,mz=fz*iy+fx*ix;
   if(l>.12){P.dx=mx/l;P.dz=mz/l;P.yaw+=angd(Math.atan2(mx,mz),P.yaw)*Math.min(1,dt*12);}
+  if(P.glue){/* stuck: mash the sword (or wiggle the stick) to tear free */
+    const dir=l>.5?Math.round(Math.atan2(ix,iy)/1.5708):null;let m=In.atk||In.dash?.2:0;if(dir!==null&&dir!==P.gdir){m=Math.max(m,.1);P.gdir=dir;}In.atk=In.dash=false;
+    P.stuck=Math.max(0,P.stuck+m-dt*.08);if(m)P.mashT=G.t;P.sp=P.vx=P.vz=0;P.kx=P.kz=0;
+    if(P.stuck>=1){const q=P.glue;q.on=false;q.g.visible=false;spark(q.x,.4,q.z);P.glue=null;P.stuck=0;P.freeT=G.t;G.inv=Math.max(G.inv,.7);toast('떼어냈다!',1);hud();}
+    return;}
   const shd=In.shd&&P.dash<=0;let sp=l>.12?4.6*l*(shd?.45:1):0;
   if(In.dash&&P.dashCd<=0&&P.dash<=0){P.dash=.24;P.dashCd=.9;G.inv=Math.max(G.inv,.32);if(l<=.12){P.dx=Math.sin(P.yaw);P.dz=Math.cos(P.yaw);}}In.dash=false;
   let vx=P.dx*sp,vz=P.dz*sp;if(P.dash>0){vx=P.dx*11.5;vz=P.dz*11.5;P.dash-=dt;}P.dashCd-=dt;
+  P.wet=W.puddles.some(q=>q.on&&hyp(P.x-q.x,P.z-q.z)<q.r*.92)?1:0;   /* wet floor: speed changes slowly, so you slide */
+  if(P.wet){const k=Math.min(1,dt*(P.dash>0?.8:1.7));P.slx+=(vx-P.slx)*k;P.slz+=(vz-P.slz)*k;vx=P.slx;vz=P.slz;}else{P.slx=vx;P.slz=vz;}
   P.x+=(vx+P.kx)*dt;P.z+=(vz+P.kz)*dt;const kd=Math.exp(-dt*7);P.kx*=kd;P.kz*=kd;P.vx=vx;P.vz=vz;P.sp=hyp(vx,vz);
   collide();
   if(In.atk&&G.t-P.atk>.5){P.combo=G.t-P.atk<.95?(P.combo+1)%3:0;P.atk=G.t;P.hit=false;}In.atk=false;
@@ -529,12 +641,14 @@ function updatePlayer(dt){
       if(inArc(cfx,cfz,2.9)||inArc(Ct.x,Ct.z,3.4)){P.hit=true;const sneak=!Ct.awake;Ct.hp-=sneak?2:1;spark((P.x+cfx)/2,1.3,(P.z+cfz)/2);G.shake=.3;
         if(sneak){Ct.awake=true;toast('기습!',1.2);}
         const dx=Ct.x-P.x,dz=Ct.z-P.z,d=hyp(dx,dz)||1;Ct.x+=dx/d*.7;Ct.z+=dz/d*.7;
-        if(Ct.hp<=0){G.catGone=true;Ct.leaps=2;toast('고양이가 물러난다. 집으로!',3);leapTo(Ct.x+dx/d*9,Ct.z+dz/d*9,.7,'flee');}else{Ct.state='hurt';Ct.t0=G.t;}hud();}}}
+        if(Ct.hp<=0){G.catGone=true;Ct.leaps=2;toast('고양이가 물러난다. 집으로!',3);leapTo(Ct.x+dx/d*9,Ct.z+dz/d*9,.7,'flee');}else if(Ct.state!=='dizzy'){Ct.state='hurt';Ct.t0=G.t;}hud();}}}
   W.crumbs.forEach(c=>{if(!c.got&&hyp(P.x-c.x,P.z-c.z)<1.1){c.got=true;c.g.visible=false;getFood();}});
+  W.glue.forEach(q=>{if(!q.on||P.glue||P.dash>0||G.t-(P.freeT||-9)<1)return;const dx=P.x-q.x,dz=P.z-q.z,c=Math.cos(q.ry),s=Math.sin(q.ry),lx=dx*c-dz*s,lz=dx*s+dz*c;
+    if(Math.abs(lx)<1.05&&Math.abs(lz)<.68){P.glue=q;P.stuck=0;P.gdir=null;P.glueT=G.t;toast('끈끈이에 붙었다! 칼을 연타해!',1.6);hud();}});
   W.traps.forEach(t=>{
     if(t.state===0&&hyp(P.x-t.x,P.z-t.z)<1.0&&P.dash<=0){t.state=1;t.t0=G.t;if(hurt(1,t.x,t.z,false))toast('덫에 걸렸다!',1.4);}
     if(t.state===2&&!t.got&&hyp(P.x-t.bx,P.z-t.bz)<1.25){t.got=true;t.bait.visible=false;getFood();}});
-  if(G.food>=QUOTA&&hyp(P.x-HOME.x,P.z-HOME.z)<1.7){if(G.catGone)finish(true);else if(G.t>G.msgT)toast('고양이를 달고 집에 들어갈 수는 없다.',2);}
+  if(G.food>=G.quota&&hyp(P.x-HOME.x,P.z-HOME.z)<1.7){if(G.catGone)finish(true);else if(G.t>G.msgT)toast('고양이를 달고 집에 들어갈 수는 없다.',2);}
   if(!Ct.awake&&hyp(P.x-Ct.x,P.z-Ct.z)<5.2&&P.sp>3)wakeCat(false);}
 function updateTraps(){W.traps.forEach(t=>{if(t.state===1){const k=Math.min(1,(G.t-t.t0)/.1);t.pv.rotation.z=-2.85*k;if(k>=1)t.state=2;}});}
 function updateHuman(dt){const H=Hm,e=G.t-H.t0,hm=W.human,fx=Math.sin(H.yaw),fz=Math.cos(H.yaw);
@@ -548,11 +662,12 @@ function updateHuman(dt){const H=Hm,e=G.t-H.t0,hm=W.human,fx=Math.sin(H.yaw),fz=
   hm.rotation.y=H.yaw;W.hShadow.position.set(H.tx,.03,H.tz);W.hRing.position.set(H.tx,.035,H.tz);}
 function updateCat(dt){
   if(!W.cat.g.visible)return;const e=G.t-Ct.t0,dx=P.x-Ct.x,dz=P.z-Ct.z,dist=hyp(dx,dz),want=Math.atan2(dx,dz),y0=Ct.yaw,turn=r=>{Ct.yaw+=Math.max(-r*dt,Math.min(r*dt,angd(want,Ct.yaw)));};
-  let mv=0;Ct.glow=.85;Ct.sleep=0;Ct.tCrouch=0;Ct.tWind=0;Ct.tBite=0;Ct.tFl=0;Ct.airK=-1;
+  let mv=0;Ct.glow=.85;Ct.sleep=0;Ct.tCrouch=0;Ct.tWind=0;Ct.tBite=0;Ct.tFl=0;Ct.airK=-1;Ct.tSw=0;Ct.sweep=0;W.cLine.material.opacity=0;
   switch(Ct.state){
     case 'doze':Ct.glow=.1;Ct.sleep=1;break;
     case 'hunt':turn(2.6);{const f=Math.max(0,Math.cos(angd(want,Ct.yaw)));mv=dist>5.2?2.4*f:dist<3.4?-.9:0;}   /* stalk to pouncing range */
-      if(e>Ct.wait){const front=Math.abs(angd(want,Ct.yaw))<.7;if(dist<4.3&&front){Ct.state='bitewind';Ct.t0=G.t;}else{Ct.tx=P.x+P.vx*.3;Ct.tz=P.z+P.vz*.3;Ct.state='tele';Ct.t0=G.t;}}break;
+      if(e>Ct.wait){const front=Math.abs(angd(want,Ct.yaw))<.7,ch=CH[G.ch];if(dist<4.3&&front){Ct.state=ch.swipe&&Math.random()<.5?'swipewind':'bitewind';Ct.t0=G.t;}
+        else if(ch.charge&&Ct.hp<=Ct.hpMax/2&&dist>4.5&&Math.random()<.65){Ct.state='chargewind';Ct.t0=G.t;}else{Ct.tx=P.x+P.vx*.3;Ct.tz=P.z+P.vz*.3;Ct.state='tele';Ct.t0=G.t;}}break;
     case 'tele':{const k=e/.85;Ct.tCrouch=Math.min(1,k*1.6);Ct.glow=.85+k;Ct.yaw+=angd(Math.atan2(Ct.tx-Ct.x,Ct.tz-Ct.z),Ct.yaw)*Math.min(1,dt*6);W.cRing.position.set(Ct.tx,.04,Ct.tz);W.cRing.material.opacity=.45+.4*Math.sin(G.t*20);
       if(k>=1){const lx=Ct.tx-Ct.x,lz=Ct.tz-Ct.z,l=hyp(lx,lz)||1;Ct.sx=Ct.x;Ct.sz=Ct.z;Ct.ex=Ct.tx-lx/l*2.2;Ct.ez=Ct.tz-lz/l*2.2;Ct.state='pounce';Ct.t0=G.t;}}break;
     case 'pounce':{const k=Math.min(1,e/.5);Ct.x=Ct.sx+(Ct.ex-Ct.sx)*k;Ct.z=Ct.sz+(Ct.ez-Ct.sz)*k;Ct.y=Math.sin(k*Math.PI)*3;Ct.airK=k;Ct.glow=1.6;
@@ -562,11 +677,26 @@ function updateCat(dt){
     case 'bite':{const k=Math.min(1,e/.22);Ct.tBite=Math.sin(k*Math.PI);if(k>.45&&!Ct.bit){Ct.bit=true;const hx0=Ct.x+Math.sin(Ct.yaw)*3.4,hz0=Ct.z+Math.cos(Ct.yaw)*3.4;if(hyp(P.x-hx0,P.z-hz0)<2.1)hurt(1,Ct.x,Ct.z,true);}
       if(k>=1){Ct.state='recover';Ct.t0=G.t;Ct.rec=1.1;}}break;
     case 'hurt':Ct.tFl=1-e/.4;Ct.glow=.3;if(e>.4){Ct.state='hunt';Ct.t0=G.t;Ct.wait=.45;}break;
+    /* chapter 2: a paw swipe (blockable, but it shoves you far) */
+    case 'swipewind':turn(3);Ct.tSw=Math.min(1,e/.38);Ct.sweep=.75*Ct.tSw;Ct.glow=1.6;if(e>.42){Ct.state='swipe';Ct.t0=G.t;Ct.bit=false;}break;
+    case 'swipe':{const k=Math.min(1,e/.24);Ct.tSw=1-.3*k;Ct.sweep=.75-1.7*ease(k);
+      if(k>.35&&!Ct.bit){Ct.bit=true;const hx0=Ct.x+Math.sin(Ct.yaw)*2.7,hz0=Ct.z+Math.cos(Ct.yaw)*2.7;if(hyp(P.x-hx0,P.z-hz0)<2.7)hurt(1,Ct.x,Ct.z,true,15);}
+      if(k>=1){Ct.state='recover';Ct.t0=G.t;Ct.rec=.9;}}break;
+    /* chapter 2, below half health: a straight charge. Dodge it into a table leg or a wall and the cat is dazed. */
+    case 'chargewind':{const k=e/.9;Ct.tCrouch=Math.min(1,k*1.6);Ct.glow=.85+k;if(e<.55)Ct.yaw+=angd(want,Ct.yaw)*Math.min(1,dt*8);
+      const fx=Math.sin(Ct.yaw),fz=Math.cos(Ct.yaw);W.cLine.position.set(Ct.x+fx*8.5,.045,Ct.z+fz*8.5);W.cLine.rotation.y=Ct.yaw;W.cLine.material.opacity=.5+.2*Math.sin(G.t*20);
+      if(k>=1){Ct.state='charge';Ct.t0=G.t;Ct.bit=false;Ct.sx=Ct.x;Ct.sz=Ct.z;}}break;
+    case 'charge':{const fx=Math.sin(Ct.yaw),fz=Math.cos(Ct.yaw),nx=Ct.x+fx*15*dt,nz=Ct.z+fz*15*dt;Ct.glow=1.6;
+      if(!Ct.bit&&hyp(P.x-(Ct.x+fx*2.2),P.z-(Ct.z+fz*2.2))<2){Ct.bit=true;hurt(1,Ct.x,Ct.z,true,14);}
+      const leg=LEGS.some(q=>hyp(nx+fx*1.4-q[0],nz+fz*1.4-q[1])<q[2]+.8),wall=nx<-BX+2||nx>BX-2||nz<BZ0+2.5||nz>BZ1-2;
+      if(leg||wall){Ct.state='dizzy';Ct.t0=G.t;G.shake=Math.max(G.shake,.6);toast(leg?'고양이가 탁자 다리에 부딪혔다! 지금이다.':'고양이가 벽에 부딪혔다! 지금이다.',1.6);}
+      else if(hyp(nx-Ct.sx,nz-Ct.sz)>15){Ct.state='recover';Ct.t0=G.t;Ct.rec=.8;}else{Ct.x=nx;Ct.z=nz;Ct.mvA=15;}}break;
+    case 'dizzy':Ct.glow=.15;if(e>2.6){Ct.state='hunt';Ct.t0=G.t;Ct.wait=.5;}break;
     case 'leap':{const k=Math.min(1,e/Ct.dur);Ct.x=Ct.sx+(Ct.ex-Ct.sx)*k;Ct.z=Ct.sz+(Ct.ez-Ct.sz)*k;Ct.y=Math.sin(k*Math.PI)*3.6;Ct.airK=k;
       if(k>=1){Ct.y=0;G.shake=Math.max(G.shake,.4);if(Ct.next==='flee'){if(--Ct.leaps>0)leapTo(Ct.x+Math.sin(Ct.yaw)*9,Ct.z+Math.cos(Ct.yaw)*9,.6,'flee');else{W.cat.g.visible=false;hud();}}else{Ct.state='hunt';Ct.t0=G.t;Ct.wait=1.1;}}}break;}
   if(mv&&dt>0){Ct.x+=Math.sin(Ct.yaw)*mv*dt;Ct.z+=Math.cos(Ct.yaw)*mv*dt;Ct.x=Math.max(-BX+2,Math.min(BX-2,Ct.x));Ct.z=Math.max(BZ0+2.5,Math.min(BZ1-2,Ct.z));
     LEGS.forEach(l=>{const qx=Ct.x-l[0],qz=Ct.z-l[1],q=hyp(qx,qz),r=l[2]+1.3;if(q<r&&q>1e-4){Ct.x=l[0]+qx/q*r;Ct.z=l[1]+qz/q*r;}});}
-  Ct.mv=mv;Ct.turnV=dt>0?angd(Ct.yaw,y0)/dt:0;}
+  Ct.mv=Ct.mvA||mv;Ct.mvA=0;Ct.turnV=dt>0?angd(Ct.yaw,y0)/dt:0;}
 /* ═════════ animation ═════════ */
 const ease=x=>x<=0?0:x>=1?1:x*x*(3-2*x),lerp=(a,b,t)=>a+(b-a)*t;
 /* gait foot curve: u in [0,1) of a stride, `duty` of it on the ground moving back at body speed, the rest swinging forward */
@@ -576,7 +706,7 @@ const CLEG=[['shL','elL',.341,.490,.329,.340,.25,1],['shR','elR',.341,.490,.329,
 const catTailOff=[-.13,-.65],catBase=new T.Vector3();
 function animCat(dt){const R=W.cat,B=R.B,a=Ct.an,t=G.t;if(!R.g.visible)return;const sm1=v=>Math.min(1,dt*v);
   R.g.position.set(Ct.x,Ct.y,Ct.z);R.g.rotation.y=Ct.yaw;
-  a.stand+=((Ct.sleep?0:1)-a.stand)*sm1(2.5);a.crouch+=(Ct.tCrouch-a.crouch)*sm1(9);a.wind+=(Ct.tWind-a.wind)*sm1(14);a.fl+=(Ct.tFl-a.fl)*sm1(16);
+  a.stand+=((Ct.sleep?0:1)-a.stand)*sm1(2.5);a.crouch+=(Ct.tCrouch-a.crouch)*sm1(9);a.wind+=(Ct.tWind-a.wind)*sm1(14);a.fl+=(Ct.tFl-a.fl)*sm1(16);a.sw=(a.sw||0)+(Ct.tSw-(a.sw||0))*sm1(18);a.dz=(a.dz||0)+((Ct.state==='dizzy'?1:0)-(a.dz||0))*sm1(6);
   const moving=Math.abs(Ct.mv)>.1||Math.abs(Ct.turnV)>.5;a.walk+=((moving?1:0)-a.walk)*sm1(6);
   const AMP=.15,vL=Math.abs(Ct.mv)/3.2+Math.abs(Ct.turnV)*.22;a.ph+=.6*vL/(2*AMP)*dt*(Ct.mv<-.05?-1:1);
   const st=a.stand,cr=a.crouch,wd=a.wind,bt=Ct.tBite,fl=a.fl,air=Ct.airK,as=air>=0?Math.sin(air*Math.PI):0,br=Math.sin(t*(Ct.awake?2.6:1.2));
@@ -593,7 +723,10 @@ function animCat(dt){const R=W.cat,B=R.B,a=Ct.an,t=G.t;if(!R.g.visible)return;co
     const g=stride(((a.ph+L[6])%1+1)%1,.6,AMP,.09);let tz,ty;
     if(front){tz=.6+.34*(1-st)+.08*cr+g[0]*a.walk;ty=.07+g[1]*a.walk;}else{tz=.11-.39*st-.04*cr+g[0]*a.walk;ty=.05+g[1]*a.walk;}
     if(air>=0){tz=lerp(tz,front?1.0:-.62,as);ty=lerp(ty,front?.32:.24,as);}
-    ik2(up,lo,Sy,Sz,ty,tz,L[4],L[5],L[2],L[3],par);});
+    if(L[0]==='shR'&&a.sw>.01){ty=lerp(ty,.55,a.sw);tz=lerp(tz,.98,a.sw);}
+    ik2(up,lo,Sy,Sz,ty,tz,L[4],L[5],L[2],L[3],par);if(L[0]==='shR')up.rotation.z=-Ct.sweep*a.sw;});
+  R.head.rotation.z+=Math.sin(t*8)*.35*a.dz;B.hips.rotation.z+=Math.sin(t*4)*.08*a.dz;
+  W.stars.visible=a.dz>.15;if(W.stars.visible){W.stars.position.set(Ct.x+Math.sin(Ct.yaw)*1.8,Ct.y+4.3,Ct.z+Math.cos(Ct.yaw)*1.8);W.stars.rotation.y=t*4;W.stars.scale.setScalar(a.dz);}
   R.eyes.forEach(m=>m.emissiveIntensity+=(Ct.glow-m.emissiveIntensity)*.15);
   W.catL.position.set(Ct.x+Math.sin(Ct.yaw)*2.4,Ct.y+3.6,Ct.z+Math.cos(Ct.yaw)*2.4);W.catL.intensity=Ct.awake?.7:.15;
   /* tail: curled when asleep, low with a twitching tip when hunting, lashing and puffed when hurt */
@@ -627,6 +760,7 @@ function animHero(dt){const H=W.hero,B=H.B,U=H.U,t=G.t,play=G.state==='play',win
   if(dk){ax=lerp(ax,.15,dk);ay=0;az=lerp(az,-.15,dk);sx=lerp(sx,.2,dk);}
   if(win||G.state==='cut'||G.state==='intro'){const home=hyp(P.x+1.9,P.z+4.4)<.6?1:0;crx+=.2*home;hdx+=.15*home;ax=lerp(ax,-.1,.8);sx=lerp(sx,.4,.8);}
   const K=P.pose;if(K){crx+=K.crx||0;hdx+=K.hdx||0;hdy+=K.hdy||0;}
+  if(P.glue){const w=Math.sin(t*22)*Math.max(.25,1-(t-(P.mashT||0))*2);cry+=.35*w;crx+=.25;hdy+=.3*w;}
   nrx=-.55*crx*(1-dk)+.15*age+.45*dk+.5*rs;
   /* roll: the whole body turns once forward around its middle, curled up */
   const c=.45,rx=roll>=0?6.2832*ease(roll):0;U.position.set(0,c-c*Math.cos(rx),-c*Math.sin(rx));U.rotation.x=rx;
@@ -656,6 +790,16 @@ function updateCamera(dt){
   if(G.shake>0){const s=G.shake*.35;cx+=(Math.random()-.5)*s;cy+=(Math.random()-.5)*s;G.shake-=dt*1.6;}
   camera.position.set(cx,cy,cz);camera.lookAt(P.x+fx*2.2,1.4+(Ct.awake&&!G.catGone?.7:0),P.z+fz*2.2);
   if(G.camFrom){const e=1-ease((G.t-G.camFrom.t)/1.4);if(e<=0)G.camFrom=null;else{camera.position.lerp(G.camFrom.p,e);camera.quaternion.slerp(G.camFrom.q,e);}}}   /* ease out of a cutscene's last framing */
+/* rain: lightning through the window, drops from the leaking ceiling into the puddles */
+function envStep(){const ch=CH[G.ch],t=G.t;if(!ch.rain)return;
+  if(t>G.nextFlash&&G.state!=='intro'){G.flashT=t;G.nextFlash=t+9+Math.random()*9;G.thunder=t+.5+Math.random()*1.4;}
+  const f=t-G.flashT,fl=f<0?0:f<.07?1:f<.14?.15:f<.24?.8:f<.5?.3*(1-(f-.24)/.26):0;G.flash=fl;
+  W.key.intensity=ch.env.ki*(1+fl*4);W.hemi.intensity=ch.env.hemi*(1+fl*1.6);if(W.doorL)W.doorL.intensity=.9*(1+fl*5);
+  if(t>(G.thunder||1e9)){G.thunder=1e9;sfx('thunder');}
+  W.puddles.forEach(q=>{if(!q.on)return;const c=((t+q.off*3.7)%1.6)/1.6,fall=c<.5,pc=q.pc===undefined?c:q.pc;q.pc=c;
+    q.drop.visible=fall;if(fall)q.drop.position.set(q.x,.05+11*(1-Math.pow(c/.5,2)),q.z);
+    const rk=fall?1:(c-.5)/.5;q.rip.scale.setScalar(.15+rk*q.r*.75);q.rip.material.opacity=fall?0:.45*(1-rk);
+    if(pc<.5&&c>=.5&&W.cur===W.scene)sfx('plip',[q.x,.1,q.z,4]);});}
 function step(dt){
   G.t+=dt;if(G.inv>0)G.inv-=dt;if(G.t>G.msgT)$('toast').style.opacity=0;
   if(G.state==='play'){updatePlayer(dt);updateHuman(dt);if(G.state==='play'){if(Ct.awake||Ct.state==='leap')updateCat(dt);else updateCat(0);}}
@@ -669,7 +813,7 @@ function step(dt){
   const st=G.t-(W.spark.userData.t||-9);W.spark.material.opacity=st<.22?1-st/.22:0;W.spark.scale.setScalar(.4+st*7);
   W.key.position.set(P.x+7,12,P.z+1);W.key.target.position.set(P.x,0,P.z);
   W.fill.position.set(P.x-Math.sin(cam.yaw)*2.5,4,P.z-Math.cos(cam.yaw)*2.5);
-  W.dust.rotation.y=Math.sin(G.t*.05)*.05;W.dust.position.y=Math.sin(G.t*.2)*.4;W.shafts.forEach((m,i)=>m.material.opacity=.08+Math.sin(G.t*.5+i)*.02);
+  W.dust.rotation.y=Math.sin(G.t*.05)*.05;W.dust.position.y=Math.sin(G.t*.2)*.4;W.shafts.forEach((m,i)=>m.material.opacity=(m.userData.base||.08)*(1+Math.sin(G.t*.5+i)*.25));envStep();
   updateCamera(dt);}
 /* ═════════ the home inside the wall, and the family ═════════ */
 /* A separate scene that sits, in world coordinates, right behind the kitchen's mousehole (the doorway lines up
@@ -735,7 +879,7 @@ function buildHome(){const s=W.home=new T.Scene(),h=HM;s.background=new T.Color(
   W.flame.add(at(new T.Mesh(new T.SphereGeometry(1,10,8),new T.MeshBasicMaterial({color:0xfff4d0,blending:T.AdditiveBlending,depthWrite:false,fog:false})),0,-.25,0,.55,.5,.55));
   W.halo=new T.Sprite(new T.SpriteMaterial({map:glowTex(),blending:T.AdditiveBlending,depthWrite:false,transparent:true,opacity:.55,fog:false}));W.halo.position.set(0,.56,0);W.halo.scale.set(1.3,1.3,1);cd.add(W.halo);
   const cl=W.candle=new T.PointLight(0xff9a48,2.6,14,2);cl.position.set(h.candle[0],h.top+.62,h.candle[1]);cl.castShadow=true;cl.shadow.mapSize.set(512,512);cl.shadow.bias=-.004;cl.shadow.camera.near=.1;s.add(cl);
-  const dl=new T.PointLight(0x7090ff,.9,7,2);dl.position.set(-3.2,1.2,h.Z1-.5);s.add(dl);
+  const dl=W.doorL=new T.PointLight(0x7090ff,.9,7,2);dl.position.set(-3.2,1.2,h.Z1-.5);s.add(dl);
   const capG=new T.CylinderGeometry(.42,.42,.28,48,2),cpp=capG.attributes.position;for(let i=0;i<cpp.count;i++){const y=cpp.getY(i),a=Math.atan2(cpp.getZ(i),cpp.getX(i)),k=y<0?1.06+.04*Math.cos(a*21):1;cpp.setX(i,cpp.getX(i)*k);cpp.setZ(i,cpp.getZ(i)*k);}capG.computeVertexNormals();
   const capM=sm(0x8a2a20,{metalness:.6,roughness:.45,envMapIntensity:1.2});[[-2.05,-12.55],[-3.75,-13.15],[-6,-11.5]].forEach(q=>s.add(at(M(capG,capM),q[0],.14,q[1])));
   /* the bed: a matchbox drawer with a cotton-ball pillow and a knitted blanket; the sleeve stands as headboard */
@@ -752,6 +896,11 @@ function buildHome(){const s=W.home=new T.Scene(),h=HM;s.background=new T.Color(
   /* tonight's food appears on the table on the way home */
   const fd=W.homeFood=new T.Group(),ch=sm(0xf2c24e,{roughness:.55,emissive:0x2a1800});fd.visible=false;s.add(fd);
   [[0,.22,0,0],[.28,.06,.18,1.2],[-.3,.06,.12,2.5],[.12,.06,-.32,4],[-.2,.08,-.28,5.2]].forEach(q=>{const m=M(new T.CylinderGeometry(.15,.15,.12,1,1,false,0,1.1),ch);m.position.set(h.bowl[0]+q[0],h.top+q[1],h.bowl[1]+q[2]);m.rotation.y=q[3];fd.add(m);});
+  /* chapter 2: the roof leaks into a bottle cap on the floor */
+  const hd=W.homeDrip=new T.Group();hd.visible=false;s.add(hd);hd.add(at(M(capG,sm(0x2a5a7a,{metalness:.6,roughness:.4,envMapIntensity:1.2})),-5.8,.14,-9.2));
+  const hw=new T.Mesh(new T.CircleGeometry(.38,24),sm(0x0b1018,{roughness:.05,metalness:.5,envMapIntensity:1.5}));hw.rotation.x=-Math.PI/2;hw.position.set(-5.8,.29,-9.2);hd.add(hw);
+  const hp2=new T.Mesh(new T.CircleGeometry(.9,24),sm(0x0b1018,{roughness:.05,metalness:.5,transparent:true,opacity:.7,polygonOffset:true,polygonOffsetFactor:-2}));hp2.rotation.x=-Math.PI/2;hp2.position.set(-5.6,.013,-9.0);hd.add(hp2);
+  W.hDrop=new T.Mesh(new T.SphereGeometry(.035,8,6),new T.MeshBasicMaterial({color:0xbcd0f0,fog:false}));W.hDrop.scale.y=2.4;hd.add(W.hDrop);
   const n=140,p=new Float32Array(n*3),r=rnd(9);for(let i=0;i<n;i++){p[i*3]=h.X0+r()*w;p[i*3+1]=r()*h.H;p[i*3+2]=h.Z0+r()*d;}
   const dg=new T.BufferGeometry();dg.setAttribute('position',new T.BufferAttribute(p,3));W.hdust=new T.Points(dg,new T.PointsMaterial({color:0xffc890,size:.03,transparent:true,opacity:.5,blending:T.AdditiveBlending,depthWrite:false}));s.add(W.hdust);
   /* the family */
@@ -777,7 +926,7 @@ function animKin(dt){if(!W.kin)return;const t=G.t;
     const dx=k.x-k.px,dz=k.z-k.pz,v=dt>0?hyp(dx,dz)/dt:0;k.px=k.x;k.pz=k.z;
     k.mv+=((v>.3?1:0)-k.mv)*Math.min(1,dt*8);if(v>.3){k.ph+=dt*(4.5+i*.4);k.yaw+=angd(Math.atan2(dx,dz),k.yaw)*Math.min(1,dt*10);}
     const hop=Math.abs(Math.sin(k.ph*Math.PI))*.16*s*k.mv,lie=k.lie;
-    R.g.position.set(k.x,k.y+hop+lie*.4*s,k.z);R.g.rotation.set(-1.5708*lie,k.yaw,k.roll*lie);
+    R.g.position.set(k.x+(k.shiver?Math.sin(t*41+i*2)*.014*s:0),k.y+hop+lie*.4*s,k.z);R.g.rotation.set(-1.5708*lie,k.yaw,k.roll*lie);
     const br=Math.sin(t*(lie>.5?1.5:2.3)+i*1.3),cg=t-k.cough,ck=cg>0&&cg<.7?Math.sin(Math.min(1,cg/.35)*Math.PI)*(cg<.35?1:.6):0;
     const p0=B.hips.userData.p0,hy=-.17*k.sit;B.hips.position.set(p0.x,p0.y+hy,p0.z);
     const crx=.15*k.mv+.4*ck+k.lean+.12*k.sit+(k.nod||0)*Math.max(0,Math.sin(t*3.2+i*1.9));B.chest.rotation.set(crx,0,0);B.chest.scale.set(1+.025*br,1+.03*br,1+.025*br);B.neck.rotation.x=-.45*crx+.25*ck;
@@ -793,6 +942,8 @@ function animKin(dt){if(!W.kin)return;const t=G.t;
 /* candle flicker, dust drift; the shadow-casting candle only when the home is on screen */
 function homeStep(dt){if(!W.home)return;const t=G.t,f=.86+.08*Math.sin(t*13.1)+.05*Math.sin(t*29.7+1)+.04*Math.sin(t*7.3+2);
   W.candle.intensity=2.2*f*(W.homeFood.visible?1.15:1);W.flame.scale.set(.045,.11*(.9+.15*f),.045);W.flame.rotation.z=Math.sin(t*3.1)*.08;W.halo.material.opacity=.45*f;
+  if(W.homeDrip.visible){const c=(t%1.3)/1.3,pc=W.hdc===undefined?c:W.hdc;W.hdc=c;W.hDrop.visible=c<.6;W.hDrop.position.set(-5.8,.3+(HM.H-.3)*(1-Math.pow(Math.min(1,c/.6),2)),-9.2);
+    if(pc<.6&&c>=.6&&W.cur===W.home)sfx('plip',[-5.8,.3,-9.2,3]);}
   W.hdust.rotation.y=Math.sin(t*.04)*.03;W.hdust.position.y=Math.sin(t*.25)*.15;}
 /* ═════════ cutscenes: shots on camera rails, subtitles, letterbox ═════════ */
 /* A cut is a list of shots. Each shot names its scene (home | kitchen), a duration, a camera move
@@ -816,19 +967,24 @@ const kinPos=i=>{const k=W.kin[i].st;return[k.x,.6,k.z,3];};
 
 /* where everyone is in the home for a given moment */
 function homeLayout(name){const K=W.kin.map(R=>R.st),fd=W.homeFood,bowl=[HM.bowl[0],HM.top+.2,HM.bowl[1]];
-  K.forEach(k=>Object.assign(k,{y:0,lie:0,roll:0,sit:0,eye:1,look:null,al:null,ar:null,lean:0,hdx:0,nod:0,px:null}));
+  K.forEach(k=>Object.assign(k,{y:0,lie:0,roll:0,sit:0,eye:1,look:null,al:null,ar:null,lean:0,hdx:0,nod:0,shiver:0,px:null}));
+  W.homeDrip.visible=G.ch===2;W.kin.forEach((R,i)=>{if(i)R.g.scale.setScalar(R.o.s*(G.ch>=2?1.07:1));});   /* the children have grown a little */
   if(name==='night'){fd.visible=false;
     [[-7.85,.3],[-7.0,-.25],[-6.2,.35]].forEach((q,j)=>Object.assign(K[j+1],{x:q[0],z:-12.85+j*.06,y:.08,yaw:.12,lie:1,roll:q[1],eye:0,al:[.25,0,.15],ar:[.25,0,-.15]}));
     Object.assign(K[0],{x:HM.seat[0],z:HM.seat[1],y:.04,yaw:-2.6,sit:1,look:[-6.2,.6,-13.4]});
     P.x=-2.15;P.z=-10.85;P.yaw=Math.atan2(HM.table[0]-P.x,HM.table[1]-P.z);P.pose={hdx:.35};}
+  if(name==='rain'){fd.visible=false;   /* the children sit up in bed, shivering, under one blanket */
+    [[-7.65,-13.05],[-7.0,-12.95],[-6.35,-13.05]].forEach((q,j)=>Object.assign(K[j+1],{x:q[0],z:q[1],y:.1,yaw:.12+(j-1)*.25,sit:1,shiver:1,look:[-5.8,.4,-9.2]}));
+    Object.assign(K[0],{x:HM.seat[0],z:HM.seat[1],y:.04,yaw:-2.6,sit:1,look:[-7,1,-13]});
+    P.x=-6.7;P.z=-10.4;P.yaw=Math.atan2(-5.8-P.x,-9.2-P.z);P.pose={hdx:-.35};}
   if(name==='end'){fd.visible=true;
     Object.assign(K[0],{x:-4.75,z:-10.7,yaw:Math.atan2(HM.table[0]+4.75,HM.table[1]+10.7),look:bowl});
     [[-4.85,-12.25,0],[-2.05,-12.55,.28],[-3.75,-13.15,.28]].forEach((q,j)=>Object.assign(K[j+1],{x:q[0],z:q[1],y:q[2],yaw:Math.atan2(HM.table[0]-q[0],HM.table[1]-q[1]),look:bowl,nod:.12}));
     P.x=-2.1;P.z=-10.7;P.yaw=Math.atan2(HM.table[0]-P.x,HM.table[1]-P.z);P.pose={hdx:.15};}}
-function storyTitle(){homeLayout('night');heroTo(W.home);}
+function storyTitle(){homeLayout(G.ch===2?'rain':'night');heroTo(W.home);}
 
 const SHOTS={
-  intro:()=>[
+  intro1:()=>[
     {sc:'home',d:7,fin:1,init(){homeLayout('night');},cam:[[-4.4,1.95,-13.2],[-2.4,1.3,-10.9],[-4.15,1.85,-12.85],[-2.4,1.35,-10.95]],
       sub:[[1,6.6,'벽 속 작은 집. 그릇은 사흘째 비어 있다.']]},
     {sc:'home',d:6.5,cam:[[-8.3,2.4,-11.3],[-6.9,.45,-13.3],[-8.1,2.1,-11.7],[-6.9,.4,-13.35]],sub:[[.6,6,'막내의 기침이 잦아졌다.']],
@@ -846,7 +1002,7 @@ const SHOTS={
       init(){P.x=-3.2;P.z=-7;P.yaw=0;P.pose=null;},on(u){walkHero([[-3.2,-7],[-3.2,-5.6]],u,.2,4.5);}},
     {sc:'kit',d:5.2,chap:[0,3.8],cam:[[-3.0,4.6,-6.4],[-1,.8,9],[-3.2,3.3,-6.5],[-3.2,1.4,-1.4]],
       on(u){walkHero([[-3.2,-5.6],[-3.2,-3.6]],u,0,2.4);P.yaw+=angd(0,P.yaw)*.1;P.pose=u>2.4?{hdy:Math.sin((u-2.4)*1.6)*.6}:null;}}],
-  ret:()=>{let sx=P.x,sz=P.z;return[
+  ret1:()=>{let sx=P.x,sz=P.z;return[
     {sc:'kit',d:3.6,fout:1,cam:[[-1.6,2.2,-2.2],[-3.2,1,-6.4],[-2.3,1.7,-3.4],[-3.2,1,-6.6]],init(){sx=P.x;sz=P.z;P.pose=null;},
       on(u){walkHero([[sx,sz],[-3.2,-5.6],[-3.2,-7]],u,0,3.4);}},
     {sc:'home',d:7,fin:1,cam:[[.6,1.6,-12.2],[-3.6,1.0,-8.9],[.3,1.5,-11.8],[-3.6,1.0,-9.1]],sub:[[3,6.8,'문턱을 넘자, 작은 발소리 셋이 달려온다.']],
@@ -871,7 +1027,21 @@ const SHOTS={
         if(u>1.6)W.kin[0].st.look=[k.x,.9,k.z];}}];}
 };
 
-function startCut(name,end){const c=CUT;c.name=name;c.shots=SHOTS[name]();c.t=0;c.i=-1;c.end=end;c.flags={};c.music=name==='intro'?'night':'home';
+/* chapter 2 reuses chapter 1's kitchen shots and staging with new home scenes and words */
+SHOTS.intro2=()=>{const k1=SHOTS.intro1();return[
+  {sc:'home',d:6.5,fin:1,init(){homeLayout('rain');},cam:[[-3.6,1.5,-8.6],[-6.2,1.0,-9.9],[-3.85,1.45,-8.8],[-6.2,1.0,-9.95]],sub:[[1,6.2,'장맛비가 사흘째. 지붕이 샌다.']]},
+  {sc:'home',d:6.5,cam:[[-8.6,2.9,-10.6],[-7,.8,-13.1],[-8.4,2.6,-11],[-7,.75,-13.15]],sub:[[.6,6.2,'아이들이 추위에 떤다. 오늘은 여섯 조각이 필요하다.']],
+    on(u){const k=W.kin[3].st;if(u>2.2)once('c1',()=>{k.cough=G.t;sfx('cough',kinPos(3));});W.kin[0].st.look=[k.x,.9,k.z];}},
+  {sc:'home',d:5.8,fout:1,cam:[[-1.9,1.1,-11.4],[-3.2,1.2,-7.3],[-2,1.08,-10.9],[-3.2,1.2,-7.2]],sub:[[1.6,5.4,'아버지는 빗소리 속으로 나선다.']],
+    init(){P.x=-3.3;P.z=-8.95;P.yaw=0;P.pose=null;Object.assign(W.kin[0].st,{x:-4.3,z:-9.9,y:0,sit:0,yaw:.4,px:null});},
+    on(u){walkHero([[-3.3,-8.95],[-3.2,-8.05]],u,0,1.6);if(u>1.6&&u<3.4){const b=Math.sin(Math.PI*seg01(u,1.7,3.3));P.pose={hdy:-1.1*b};}else P.pose=null;
+      if(u>2.2)once('fl',()=>{G.flashT=G.t;G.thunder=G.t+.8;});walkHero([[-3.2,-8.05],[-3.2,-6.6]],u,3.4,5.8);W.kin[0].st.look=heroHead();}},
+  k1[4],k1[5]];};
+SHOTS.ret2=()=>{const r=SHOTS.ret1(),say=[null,[[3,6.8,'젖은 아버지에게 아이들이 매달렸다.']],[[1.8,5.8,'여섯 조각. 빗소리가 조금 잦아들었다.']],
+  [[.6,3.7,'물 먹은 털이 천근 같았다.'],[4,7.2,'그래도 그는 아무렇지 않은 듯 웃었다.']],[[1,5.6,'빗소리 속에서, 막내의 기침은 더 깊어졌다.']]];
+  say.forEach((s,i)=>{if(s)r[i].sub=s;});return r;};
+function startCut(name,end){const c=CUT;c.name=name;c.shots=SHOTS[name]();c.t=0;c.i=-1;c.end=end;c.flags={};c.music=name.indexOf('intro')===0?CH[G.ch].music:'home';
+  $('chap').firstElementChild.textContent=CHN[G.ch];$('chap').lastElementChild.textContent=CH[G.ch].title;
   c.total=c.shots.reduce((a,s)=>a+s.d,0);G.state='cut';
   ['hud','pad','joy'].forEach(id=>$(id).style.display='none');$('intro').classList.remove('show');$('end').classList.remove('show');$('toast').style.opacity=0;
   document.body.classList.add('cine');}
@@ -889,10 +1059,34 @@ function storyStep(dt){const c=CUT;if(!c.end)return;c.t+=dt;let acc=0,i=0;while(
   $('chap').classList.toggle('show',!!sh.chap&&u>=sh.chap[0]&&u<sh.chap[1]);
   if(c.t>=c.total)endCut(false);}
 
-function startIntro(){startCut('intro',skip=>{if(!skip)G.camFrom={p:camera.position.clone(),q:camera.quaternion.clone(),t:G.t};begin();});}
-function startReturn(){startCut('ret',()=>{G.state='win';homeLayout('end');heroTo(W.home);$('end').classList.add('show');});}
+function startIntro(){startCut('intro'+G.ch,skip=>{if(!skip)G.camFrom={p:camera.position.clone(),q:camera.quaternion.clone(),t:G.t};begin();});}
+function startReturn(){markDone(G.ch);startCut('ret'+G.ch,()=>{G.state='win';homeLayout('end');heroTo(W.home);endButtons(true);$('end').classList.add('show');});}
+function startChapter(n){if(!CH[n]||!CH[n].play)return;G.ch=n;reset();storyTitle();startIntro();}
+function toLanding(){G.state='intro';$('end').classList.remove('show');storyTitle();landing();$('intro').classList.add('show');$('intro').scrollTop=0;}
+function endButtons(win){const nx=CH[G.ch+1],b=$('next');b.style.display=win&&nx&&nx.play?'':'none';if(nx)b.textContent='다음 밤으로 · '+CHN[G.ch+1]+' '+nx.title;}
 $('skip').addEventListener('click',()=>{if(G.state==='cut')endCut(true);});
 window.addEventListener('keydown',e=>{if(e.code==='Escape'&&G.state==='cut')endCut(true);});
+
+/* ═════════ landing: the five nights ═════════ */
+const ART={
+  1:['linear-gradient(160deg,#6a3418,#1c100a 75%)','<path d="M56 10a15 15 0 1 0 10 27a12 12 0 1 1-10-27z" fill="#f3e2b0"/><path d="M12 64h44L12 40z" fill="#f2c24e"/><circle cx="22" cy="56" r="3" fill="#c8941e"/><circle cx="31" cy="59" r="2.2" fill="#c8941e"/><circle cx="20" cy="48" r="2" fill="#c8941e"/>'],
+  2:['linear-gradient(160deg,#20304e,#0a0f18 75%)','<path d="M40 8C40 8 25 30 25 41a15 15 0 0 0 30 0C55 30 40 8 40 8z" fill="#8fb2ff"/><path d="M16 46c0 0-6 9-6 13a6 6 0 0 0 12 0c0-4-6-13-6-13zM64 50c0 0-5 7-5 10a5 5 0 0 0 10 0c0-3-5-10-5-10z" fill="#5d7fb6"/><path d="M33 40a8 8 0 0 0 6 9" stroke="#dce8ff" stroke-width="2.5" fill="none" stroke-linecap="round"/>'],
+  3:['linear-gradient(160deg,#34404c,#0e1218 75%)','<rect x="27" y="18" width="26" height="10" rx="2" fill="#e8dcc0"/><rect x="24" y="28" width="32" height="40" rx="6" fill="#a8742f"/><rect x="24" y="40" width="32" height="14" fill="#f3ede2"/><path d="M40 43v8M36 47h8" stroke="#b5302a" stroke-width="2.6"/>'],
+  4:['linear-gradient(160deg,#3c4658,#10141c 75%)','<rect x="33" y="40" width="14" height="28" rx="2" fill="#eadfc4"/><path d="M40 22c6 7 5 14 0 16c-5-2-6-9 0-16z" fill="#ffb050"/><g fill="#dfe8f5"><circle cx="15" cy="20" r="2.4"/><circle cx="64" cy="14" r="2"/><circle cx="66" cy="44" r="2.6"/><circle cx="12" cy="52" r="2"/><circle cx="24" cy="34" r="1.6"/></g>'],
+  5:['linear-gradient(170deg,#f0b062,#8a4a4c 55%,#2a1a24)','<path d="M14 70V46a26 26 0 0 1 52 0v24z" fill="#24140e"/><circle cx="40" cy="58" r="11" fill="#ffe08a"/><g stroke="#ffe08a" stroke-width="2.4" stroke-linecap="round"><path d="M40 41v-6M27 46l-4-4M53 46l4-4M22 58h-6M58 58h6"/></g>']};
+function nextCh(){for(let n=1;CH[n];n++)if(CH[n].play&&!PROG.done[n])return n;return 1;}
+function landing(){const L=$('chlist');let h='';
+  for(let n=1;CH[n];n++){const c=CH[n],done=!!PROG.done[n],a=ART[n];
+    h+='<li class="ch'+(c.play?'':' locked')+'"><div class="art" style="background:'+a[0]+'"><span class="num">'+CHN[n]+'</span>'+
+      '<span class="chip'+(done?' done':'')+'">'+(done?'완료':c.play?'플레이 가능':'준비 중')+'</span><svg viewBox="0 0 80 80" aria-hidden="true">'+a[1]+'</svg></div>'+
+      '<div class="bd"><h3>'+c.title+'</h3><span class="meta">'+c.season+(c.play?' · 먹이 '+c.quota+' · 체력 '+c.hp:'')+'</span><p>'+c.blurb+'</p>'+
+      '<ul>'+c.feat.map(f=>'<li>'+f+'</li>').join('')+'</ul>'+
+      '<button type="button" data-ch="'+n+'"'+(c.play&&G.ready?'':' disabled')+'>'+(c.play?(G.ready?(done?'다시 하기':'이 밤 시작'):'준비 중…'):'곧 공개')+'</button></div></li>';}
+  L.innerHTML=h;const n=nextCh(),b=$('go');if(G.ready){b.disabled=false;b.textContent=n===1&&!PROG.done[1]?'문턱을 넘는다':'이어서 · '+CHN[n]+' '+CH[n].title;}}
+$('chlist').addEventListener('click',e=>{const b=e.target.closest('button[data-ch]');if(b&&!b.disabled)startChapter(+b.dataset.ch);});
+$('next').addEventListener('click',()=>startChapter(G.ch+1));
+$('tohome').addEventListener('click',toLanding);
+landing();
 /* ═════════ post: bloom, grade, vignette, grain ═════════ */
 const postScene=new T.Scene(),postCam=new T.OrthographicCamera(-1,1,1,-1,0,1);
 const postMat=new T.ShaderMaterial({defines:{BN:20},depthTest:false,depthWrite:false,uniforms:{tD:{value:null},res:{value:new T.Vector2(1,1)},time:{value:0}},
@@ -933,7 +1127,7 @@ function applyQuality(){setTier(Q.mode==='auto'?Q.tier:+Q.mode);}
    and hero. Music is original, rendered offline by tools/compose_bgm.py into audio/*.mp3 — looped tracks
    carry a wrap-around pad, so the loop points below are seamless. audioTick() diffs the game state each
    frame and fires sounds on changes, so game.js needs no sound calls. */
-const BGM={night:{loop:[.25,60.25],vol:.75},cat:{loop:[.25,40.25],vol:.8},home:{vol:.9},fall:{vol:.85}};
+const BGM={night:{loop:[.25,60.25],vol:.75},cat:{loop:[.25,40.25],vol:.8},home:{vol:.9},fall:{vol:.85},rain:{loop:[.25,64.25],vol:.75}};
 const AU={ctx:null,on:true,raw:{},buf:{},mus:null,want:null,S:null,clock:0,tk:0};
 try{if(localStorage.getItem('mf.sound')==='0')AU.on=false;}catch(e){}
 for(const k in BGM)AU.raw[k]=fetch('audio/'+k+'.mp3').then(r=>r.ok?r.arrayBuffer():null).catch(()=>null);
@@ -958,6 +1152,11 @@ function audioInit(){
   const hp=aPan(13,1.5,23,5),hg=c.createGain();hg.gain.value=.05;hg.connect(hp);
   [[50,1],[100,.5],[150,.18]].forEach(h=>{const o=c.createOscillator(),g=c.createGain();o.frequency.value=h[0];g.gain.value=h[1];o.connect(g);g.connect(hg);o.start();});
   const hn=c.createBufferSource();hn.buffer=nb;hn.loop=true;const hf=c.createBiquadFilter();hf.type='lowpass';hf.frequency.value=160;const hng=c.createGain();hng.gain.value=.5;hn.connect(hf);hf.connect(hng);hng.connect(hg);hn.start();
+  /* rain on the roof: a hiss and a low rumble, faded in on rainy nights */
+  const rn=c.createBufferSource();rn.buffer=nb;rn.loop=true;const rf=c.createBiquadFilter();rf.type='bandpass';rf.frequency.value=2200;rf.Q.value=.35;
+  const rn2=c.createBufferSource();rn2.buffer=nb;rn2.loop=true;rn2.playbackRate.value=.73;const rf2=c.createBiquadFilter();rf2.type='lowpass';rf2.frequency.value=320;const rg2=c.createGain();rg2.gain.value=1.6;
+  AU.rain=c.createGain();AU.rain.gain.value=0;AU.rainF=c.createBiquadFilter();AU.rainF.type='lowpass';AU.rainF.frequency.value=9000;
+  rn.connect(rf);rf.connect(AU.rain);rn2.connect(rf2);rf2.connect(rg2);rg2.connect(AU.rain);AU.rain.connect(AU.rainF);AU.rainF.connect(AU.sfx);rn.start();rn2.start();
   for(const k in BGM)AU.raw[k].then(ab=>{if(!ab)return;c.decodeAudioData(ab,b=>{AU.buf[k]=b;if(AU.want===k&&!AU.mus)playMusic(k,1.5);},()=>{});});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)c.suspend();else if(AU.on)c.resume();});
   AU.clock=c.currentTime+1;}
@@ -1019,6 +1218,14 @@ const SFX={
   tick(p,hi){const t=AU.ctx.currentTime,o=aOut(p,.5,.4);aNz(o,t,'bandpass',hi?3600:2700,0,9,.014,.11);aOsc(o,t,'sine',hi?2100:1650,0,.012,.04);},
   cough(p){const t=AU.ctx.currentTime,o=aOut(p,.3,.8);[0,.2].forEach((d,i)=>{aNz(o,t+d,'bandpass',1100-i*200,600,2.5,.13,.22-.07*i,.01);aOsc(o,t+d,'triangle',520-i*60,300,.09,.05,.005);});},
   crackle(p){const t=AU.ctx.currentTime,o=aOut(p,.1,.2);aNz(o,t,'highpass',3500,3500,1,.012,aR(.03,.08));},
+  plip(p){const t=AU.ctx.currentTime,o=aOut(p,.3,.5),f=aR(900,1400);aOsc(o,t,'sine',f,f*2.2,.06,.07,.002);aNz(o,t,'bandpass',3000,1500,3,.03,.03);},
+  splash(p,v){const t=AU.ctx.currentTime,o=aOut(p,.1,.4);aNz(o,t,'bandpass',aR(900,1300),500,1.2,.12,.05+.06*v,.01);aNz(o,t+.03,'highpass',4000,4000,1,.08,.02+.03*v,.01);},
+  thunder(){const t=AU.ctx.currentTime,o=aOut(null,.5,5);aNz(o,t,'lowpass',900,60,.7,3.6,.55,.04);aNz(o,t+.05,'lowpass',200,40,1,4.2,.6,.5);aOsc(o,t,'sine',48,30,3,.25,.6);},
+  glue(p){const t=AU.ctx.currentTime,o=aOut(p,.1,.6);aNz(o,t,'lowpass',700,240,3,.3,.4,.02);aOsc(o,t,'sine',180,70,.25,.2);},
+  rip(p){const t=AU.ctx.currentTime,o=aOut(p,.15,.6);for(let k=0;k<5;k++)aNz(o,t+k*.03,'bandpass',aR(1500,3000),800,2,.05,.18,.003);},
+  crash(p){const t=AU.ctx.currentTime,o=aOut(p,.5,2);aOsc(o,t,'sine',70,32,.6,.9);aNz(o,t,'lowpass',1200,200,1,.4,.6);aNz(o,t+.02,'bandpass',500,300,4,.5,.25,.01);SFX.bell(p,.12);
+    aMeow(o,t+.15,[500,700,420,300],[800,1200,700,500],.6,.25);},
+  swipe(p){const t=AU.ctx.currentTime,o=aOut(p,.15,.6);aNz(o,t,'bandpass',1500,400,1.6,.22,.5,.05);},
   family(list){const t=AU.ctx.currentTime;list.forEach((q,i)=>{for(let k=0;k<2;k++){const d=i*.18+k*aR(.25,.45),o=aOut([q[0],q[1],q[2],3],.25,d+.5),f=(i?3300:2600)*aR(.95,1.08);
     aOsc(o,t+d,'sine',f,f*1.25,.07,.06,.008);aOsc(o,t+d+.09,'sine',f*1.1,f*1.35,.06,.05,.008);}});}
 };
@@ -1032,7 +1239,7 @@ function playMusic(name,fade){const c=AU.ctx,t=c.currentTime;
 
 /* ── per-frame: listener, ambience, and sounds for whatever changed since last frame ── */
 const _af=new T.Vector3();
-function aSnap(){return{st:G.state,atk:P.atk,dash:P.dash>0,hurt:P.hurtT,blk:P.blkT,pick:P.pickT,cs:Ct.state,ct0:Ct.t0,aw:Ct.awake,hp:Ct.hp,cy:Ct.y,hs:Hm.state,
+function aSnap(){return{gl:!!P.glue,st:G.state,atk:P.atk,dash:P.dash>0,hurt:P.hurtT,blk:P.blkT,pick:P.pickT,cs:Ct.state,ct0:Ct.t0,aw:Ct.awake,hp:Ct.hp,cy:Ct.y,hs:Hm.state,
   tr:W.traps.map(t=>t.state),ph:Math.floor(P.ph*2),cph:Math.floor(Ct.an.ph*4)};}
 function audioTick(){const s=aSnap(),o=AU.S;AU.S=s;const c=AU.ctx;if(!c||c.state!=='running'||!o)return;const t=c.currentTime,L=c.listener;
   /* listener: between camera and hero, facing where the camera looks */
@@ -1041,10 +1248,11 @@ function audioTick(){const s=aSnap(),o=AU.S;AU.S=s;const c=AU.ctx;if(!c||c.state
   else{L.setPosition(lx,ly,lz);L.setOrientation(_af.x,_af.y,_af.z,0,1,0);}
   const H=[P.x,.6,P.z],sy=Math.sin(Ct.yaw),cy=Math.cos(Ct.yaw),C=[Ct.x+sy*1.8,Ct.y+3,Ct.z+cy*1.8,5],cv=W.cat.g.visible;
   aPos(AU.purrP,C[0],C[1],C[2]);
+  const rainy=CH[G.ch].rain&&s.st!=='intro'||CH[G.ch].rain&&W.cur===W.home;AU.rain.gain.setTargetAtTime(rainy?(W.cur===W.home?.16:.3):0,t,.8);AU.rainF.frequency.setTargetAtTime(W.cur===W.home?1400:9000,t,.3);
   const pt=cv&&Ct.state==='doze'?.32*(.45+.55*Math.abs(Math.sin(t*Math.PI/1.7))):0;AU.purr.gain.setTargetAtTime(pt,t,.12);
   if(W.cur===W.home&&Math.random()<.012)SFX.crackle([HM.candle[0],HM.top+.6,HM.candle[1],2]);
   if(t>AU.clock+.5)AU.clock=t;if(t>=AU.clock){AU.clock+=1;SFX.tick([-15,9,24,6],AU.tk^=1);}   /* a wall clock, far corner */
-  const want=s.st==='cut'?CUT.music:s.st==='play'?(Ct.awake&&!G.catGone?'cat':'night'):s.st==='win'?'home':s.st==='dead'?'fall':null;
+  const want=s.st==='cut'?CUT.music:s.st==='play'?(Ct.awake&&!G.catGone?'cat':CH[G.ch].music):s.st==='win'?'home':s.st==='dead'?'fall':null;
   if(want!==AU.want){const f=want==='fall'?.3:want==='cat'?1.2:AU.want==='cat'?3:1.5;AU.want=want;playMusic(want,f);}
   if(s.st!==o.st){if(s.st==='dead')SFX.fall(H);}
   if(o.st==='play'){
@@ -1052,14 +1260,15 @@ function audioTick(){const s=aSnap(),o=AU.S;AU.S=s;const c=AU.ctx;if(!c||c.state
     if(s.dash&&!o.dash)SFX.roll(H);
     if(s.blk!==o.blk)SFX.clank(H);
     if(s.hurt!==o.hurt)SFX.hurt(H);
-    if(s.pick!==o.pick)SFX.pick(H,G.food>=QUOTA);
+    if(s.gl&&!o.gl)SFX.glue(H);if(!s.gl&&o.gl)SFX.rip(H);
+    if(s.pick!==o.pick)SFX.pick(H,G.food>=G.quota);
     s.tr.forEach((v,i)=>{if(v===1&&o.tr[i]===0){const q=W.traps[i];SFX.snap([q.x,.3,q.z]);}});
     if(s.hp<o.hp)SFX.catHit(C,s.hp<=0);
     else if(s.aw&&!o.aw)SFX.wake(C);
-    if(s.cs!==o.cs||(s.cs==='leap'&&s.ct0!==o.ct0)){const f={tele:SFX.hiss,pounce:SFX.pounce,bitewind:SFX.growl,bite:SFX.jaw,leap:SFX.pounce}[s.cs];if(f)f(C);}
+    if(s.cs!==o.cs||(s.cs==='leap'&&s.ct0!==o.ct0)){const f={tele:SFX.hiss,pounce:SFX.pounce,bitewind:SFX.growl,bite:SFX.jaw,leap:SFX.pounce,swipewind:SFX.growl,swipe:SFX.swipe,chargewind:SFX.hiss,charge:SFX.pounce,dizzy:SFX.crash}[s.cs];if(f)f(C);}
     if(o.cy>.05&&s.cy<=.001)SFX.land([Ct.x,.5,Ct.z,5]);
     if(s.hs!==o.hs){const q=[Hm.tx,s.hs==='warn'?4:1,Hm.tz,8];if(s.hs==='warn')SFX.warn(q);else if(s.hs==='fall')SFX.drop(q);else if(s.hs==='hold')SFX.stomp(q);}}
-  if((s.st==='play'||s.st==='cut')&&s.ph!==o.ph&&P.sp>.5&&P.dash<=0)SFX.step(H,Math.min(1,P.sp/4.6));
+  if((s.st==='play'||s.st==='cut')&&s.ph!==o.ph&&P.sp>.5&&P.dash<=0){if(P.wet&&s.st==='play')SFX.splash(H,Math.min(1,P.sp/4.6));else SFX.step(H,Math.min(1,P.sp/4.6));}
   /* the collar bell gives the cat away when it walks */
   if(cv&&s.st==='play'&&s.cph!==o.cph&&Ct.an.walk>.3){const q=[Ct.x,.4,Ct.z,5];SFX.paw(q);if(Math.random()<.55)SFX.bell([C[0],C[1]-.8,C[2],5],.05);}}
 
@@ -1096,7 +1305,7 @@ window.addEventListener('keydown',e=>{if(e.repeat){if(e.code==='Space')e.prevent
 window.addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='ShiftLeft'||e.code==='ShiftRight'||e.code==='KeyK')In.shd=false;});
 window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;In.shd=false;In.x=In.y=0;});
 $('keys').textContent=touch?'왼쪽 화면을 끌어 이동, 오른쪽 화면을 끌어 시점 회전. 칼 · 방패(누르고 있기) · 구르기 버튼.':'이동 WASD · 시점 마우스 끌기 · 칼 Space · 방패 Shift(누르고 있기) · 구르기 E · 소리 M · 장면 건너뛰기 Esc';
-$('go').addEventListener('click',startIntro);$('again').addEventListener('click',begin);
+$('go').addEventListener('click',()=>startChapter(nextCh()));$('again').addEventListener('click',begin);
 
 /* ═════════ loop ═════════ */
 let last=0;
@@ -1105,7 +1314,7 @@ function frame(ms){const raw=last?(ms-last)/1000:0,dt=Math.min(.05,raw);last=ms;
 function start(){resize();qLabel();const b=$('go'),fail=e=>{console.error(e);b.textContent='불러오지 못했습니다';};
   setTimeout(()=>{try{buildWorld();buildHome();}catch(e){fail(e);return;}
     runSculpts((d,n)=>{b.textContent='캐릭터를 조형하는 중… '+d+' / '+n;}).then(()=>{reset();storyTitle();applyQuality();
-      b.disabled=false;b.textContent='문턱을 넘는다';requestAnimationFrame(frame);}).catch(fail);},60);}
+      G.ready=true;landing();requestAnimationFrame(frame);}).catch(fail);},60);}
 start();
 })();
 </script>
