@@ -59,6 +59,19 @@ body{word-break:keep-all;background:var(--bg);color:var(--ink);font-family:var(-
 button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 #err{position:fixed;inset:0;display:none;place-items:center;padding:24px;text-align:center;line-height:1.6}
 @media (min-width:800px){.hud{padding:22px 28px 40px}}
+/* cutscenes: letterbox, subtitles, chapter title, fade, skip */
+.lb{position:fixed;left:0;right:0;height:0;background:#000;pointer-events:none;transition:height .9s ease}
+#lbT{top:0}#lbB{bottom:0}
+body.cine .lb{height:10vh}
+#sub{position:fixed;left:16px;right:16px;bottom:calc(10vh + 16px);text-align:center;font-family:var(--display);font-size:clamp(17px,4.4vw,24px);line-height:1.5;text-shadow:0 2px 12px #000,0 0 3px #000;opacity:0;transition:opacity .6s;pointer-events:none;text-wrap:balance}
+#chap{position:fixed;inset:0;display:grid;place-content:center;justify-items:center;gap:8px;pointer-events:none;opacity:0;transition:opacity 1.8s;text-shadow:0 2px 20px #000}
+#chap span{font-size:13px;letter-spacing:.35em;color:var(--accent);font-weight:600}
+#chap b{font-family:var(--display);font-size:clamp(36px,10vw,64px);font-weight:700}
+#chap.show{opacity:1}
+#fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none}
+#skip{position:fixed;right:14px;top:max(10px,calc(10vh - 46px));display:none;font:400 13px/1 var(--body);color:var(--ink);background:rgba(0,0,0,.4);border:1px solid var(--line);border-radius:4px;padding:10px 14px;cursor:pointer}
+body.cine #skip{display:block}
+@media (orientation:portrait){body.cine .lb{height:7vh}#sub{bottom:calc(7vh + 16px)}}
 </style>
 </head>
 <body>
@@ -70,6 +83,11 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   <div id="boss"><span>부엌의 주인, 고양이</span><div id="bossbar"><i></i></div></div>
 </div>
 <div id="toast" role="status"></div>
+<div class="lb" id="lbT"></div><div class="lb" id="lbB"></div>
+<div id="sub" aria-live="polite"></div>
+<div id="chap" aria-hidden="true"><span>제1장</span><b>첫 번째 밤</b></div>
+<div id="fade"></div>
+<button type="button" id="skip">건너뛰기 ›</button>
 <div id="joy"><div id="knob"></div></div>
 <div class="pad" id="pad">
   <button type="button" id="b-dash">구르기</button>

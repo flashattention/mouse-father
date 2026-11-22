@@ -84,8 +84,9 @@ function runSculpts(prog){const jobs=SJ.splice(0),idle=[],queue=[],all=[];let do
     w.postMessage({prims:q.j.prims,lo:q.j.b[0],hi:q.j.b[1],cell:q.j.cell});}
     if(!all.length)while(queue.length){const q=queue.shift();q.res(local(q.j));}}
   const mesh=j=>new Promise(res=>{queue.push({j,res});pump();});
+  const memo={};   /* identical shapes (the family share the father's body) are meshed once */
   return Promise.all(jobs.map(j=>{const key=sculptKey(j);
-    return IDB.get(key).then(hit=>hit&&hit.pos&&hit.idx?hit:mesh(j).then(r=>{IDB.put(key,r);return r;}))
+    return(memo[key]||(memo[key]=IDB.get(key).then(hit=>hit&&hit.pos&&hit.idx?hit:mesh(j).then(r=>{IDB.put(key,r);return r;}))))
       .then(r=>{fillGeo(j,r);done++;if(prog)prog(done,jobs.length);});}))
     .finally(()=>{all.forEach(w=>w.terminate());if(url)URL.revokeObjectURL(url);});}
 function earPair(c,r,rot,depth,o){const e=new T.Matrix4().makeRotationFromEuler(new T.Euler(rot[0],rot[1],rot[2])).elements,nrm=[e[8],e[9],e[10]];
@@ -169,7 +170,7 @@ function furPart(geo,o,skel){const g=new T.Group();for(let i=0;i<=SHELL_MAX;i++)
     if(skel){m.bind(skel,new T.Matrix4());m.frustumCulled=false;}m.castShadow=i===0;m.receiveShadow=true;g.add(m);}
   FURS.push(g);if(shellsNow!==SHELL_MAX)shellGroup(g,shellsNow);return g;}
 function shellGroup(g,n){g.children.forEach((m,i)=>{m.visible=i<=n;if(i<=n)m.material.userData.uL.value=i/n;});}
-function setShells(n){shellsNow=n;FURS.forEach(g=>shellGroup(g,n));}
+function setShells(n){shellsNow=n;FURS.forEach(g=>shellGroup(g,Math.max(3,Math.round(n*(g.userData.k||1)))));}   /* userData.k: fewer shells for small characters */
 /* tapered tube whose spine is rewritten every frame (tails) */
 function tailTube(nS,nR,col,furV,rad){const n=(nS+1)*nR,pos=new Float32Array(n*3),c=new Float32Array(n*3),f=new Float32Array(n).fill(furV),idx=[];
   for(let i=0;i<=nS;i++)for(let j=0;j<nR;j++){const q=(i*nR+j)*3,cc=typeof col==='function'?col(i/nS,j/nR):col;c[q]=cc[0];c[q+1]=cc[1];c[q+2]=cc[2];

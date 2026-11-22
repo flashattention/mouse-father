@@ -6,6 +6,7 @@ try{const v=localStorage.getItem('mf.quality');if(v==='auto'||QUAL[v])Q.mode=v;}
 function setTier(i){Q.tier=Math.max(0,Math.min(2,i));const q=QUAL[Q.tier];
   setShells(q.shells);
   if(W.key){W.key.shadow.mapSize.set(q.shadow,q.shadow);if(W.key.shadow.map){W.key.shadow.map.dispose();W.key.shadow.map=null;}}
+  if(W.candle){const on=Q.tier>1,sz=512;W.candle.castShadow=on;W.candle.shadow.mapSize.set(sz,sz);if(W.candle.shadow.map){W.candle.shadow.map.dispose();W.candle.shadow.map=null;}}
   postMat.defines.BN=q.bloom;postMat.needsUpdate=true;
   const d=Math.min(window.devicePixelRatio||1,q.dpr);if(d!==DPR){DPR=d;renderer.setPixelRatio(DPR);resize();}
   qLabel();}

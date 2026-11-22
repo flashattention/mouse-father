@@ -21,16 +21,16 @@ window.addEventListener('keydown',e=>{if(e.repeat){if(e.code==='Space')e.prevent
   if(e.code.indexOf('Arrow')===0)e.preventDefault();});
 window.addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='ShiftLeft'||e.code==='ShiftRight'||e.code==='KeyK')In.shd=false;});
 window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;In.shd=false;In.x=In.y=0;});
-$('keys').textContent=touch?'왼쪽 화면을 끌어 이동, 오른쪽 화면을 끌어 시점 회전. 칼 · 방패(누르고 있기) · 구르기 버튼.':'이동 WASD · 시점 마우스 끌기 · 칼 Space · 방패 Shift(누르고 있기) · 구르기 E · 소리 M';
-$('go').addEventListener('click',begin);$('again').addEventListener('click',begin);
+$('keys').textContent=touch?'왼쪽 화면을 끌어 이동, 오른쪽 화면을 끌어 시점 회전. 칼 · 방패(누르고 있기) · 구르기 버튼.':'이동 WASD · 시점 마우스 끌기 · 칼 Space · 방패 Shift(누르고 있기) · 구르기 E · 소리 M · 장면 건너뛰기 Esc';
+$('go').addEventListener('click',startIntro);$('again').addEventListener('click',begin);
 
 /* ═════════ loop ═════════ */
 let last=0;
 function frame(ms){const raw=last?(ms-last)/1000:0,dt=Math.min(.05,raw);last=ms;qualMonitor(raw);step(dt);audioTick();
-  postMat.uniforms.time.value=G.t;renderer.setRenderTarget(rt);renderer.render(W.scene,camera);renderer.setRenderTarget(null);renderer.render(postScene,postCam);requestAnimationFrame(frame);}
+  postMat.uniforms.time.value=G.t;renderer.setRenderTarget(rt);renderer.render(W.cur||W.scene,camera);renderer.setRenderTarget(null);renderer.render(postScene,postCam);requestAnimationFrame(frame);}
 function start(){resize();qLabel();const b=$('go'),fail=e=>{console.error(e);b.textContent='불러오지 못했습니다';};
-  setTimeout(()=>{try{buildWorld();}catch(e){fail(e);return;}
-    runSculpts((d,n)=>{b.textContent='캐릭터를 조형하는 중… '+d+' / '+n;}).then(()=>{reset();applyQuality();
+  setTimeout(()=>{try{buildWorld();buildHome();}catch(e){fail(e);return;}
+    runSculpts((d,n)=>{b.textContent='캐릭터를 조형하는 중… '+d+' / '+n;}).then(()=>{reset();storyTitle();applyQuality();
       b.disabled=false;b.textContent='문턱을 넘는다';requestAnimationFrame(frame);}).catch(fail);},60);}
 start();
 })();
